@@ -4,4 +4,10 @@ body {
   padding: 0;
 }
 
+.container {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+
 /*# sourceMappingURL=index.a49b055e.css.map */

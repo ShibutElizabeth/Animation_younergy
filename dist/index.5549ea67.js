@@ -142,13 +142,13 @@
       this[globalName] = mainExports;
     }
   }
-})({"jK9Pg":[function(require,module,exports) {
+})({"gXrFj":[function(require,module,exports) {
 "use strict";
 var HMR_HOST = null;
 var HMR_PORT = null;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
-module.bundle.HMR_BUNDLE_ID = "5d976ea45144a9f8";
+module.bundle.HMR_BUNDLE_ID = "1553b7605549ea67";
 function _toConsumableArray(arr) {
     return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
 }
@@ -513,14 +513,7 @@ function hmrAcceptRun(bundle, id) {
     acceptedAssets[id] = true;
 }
 
-},{}],"cWVbR":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-var _mySceneClass = require("./classes/MyScene.class");
-var _mySceneClassDefault = parcelHelpers.interopDefault(_mySceneClass);
-const myScene = new _mySceneClassDefault.default();
-console.log('app');
-
-},{"./classes/MyScene.class":"kyi8D","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kyi8D":[function(require,module,exports) {
+},{}],"kyi8D":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _three = require("three");
@@ -536,8 +529,8 @@ class MyScene {
         console.log('scene');
         this.scene = new _three.Scene();
         this.container = options.dom || document.body;
-        this.width = this.container.offsetWidth;
-        this.height = this.container.offsetHeight;
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
         this.renderer = new _three.WebGLRenderer();
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setSize(this.width, this.height);
@@ -551,9 +544,9 @@ class MyScene {
         this.time = 0;
         this.isPlaying = true;
         this.addObjects();
-        this.resize();
+        // this.resize();
         this.render();
-        this.setupResize();
+        // this.setupResize();
         this.settings();
     }
     settings() {
@@ -32821,6 +32814,6 @@ module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float progress
 },{}],"kKjfY":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nuniform float time;\nvarying vec2 vUv;\nvarying vec3 vPosition;\nuniform vec2 pixels;\nfloat PI = 3.14159265359;\n\nvoid main(){\n    vUv = uv;\n    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}";
 
-},{}]},["jK9Pg","cWVbR"], "cWVbR", "parcelRequire8d86")
+},{}]},["gXrFj","kyi8D"], "kyi8D", "parcelRequire8d86")
 
-//# sourceMappingURL=index.5144a9f8.js.map
+//# sourceMappingURL=index.5549ea67.js.map
