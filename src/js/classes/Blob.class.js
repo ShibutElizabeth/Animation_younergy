@@ -30,24 +30,29 @@ export default class Blob {
     this.camera.position.set(0, 0, 1.8);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.time = 0;
+    this.color = new THREE.Vector3(0.9, 0.9, 0.8);
  
     this.isPlaying = true;
  
+    this.settings();
     this.addObjects();
     this.resize();
     this.render();
     this.setupResize();
-    // this.settings();
   }
  
   settings() {
     this.settings = {
-      progress: 0.0,
-      koeff: 2.0,
-
+      koeff: 1.2,
+      r: 0.9,
+      g: 0.9,
+      b: 0.8,
     };
     this.gui = new GUI();
-    this.gui.add(this.settings, "progress", 0, 1, 0.01);
+    this.gui.add(this.settings, "koeff", 0, 10, 0.1);
+    this.gui.add(this.settings, "r", 0, 1, 0.01);
+    this.gui.add(this.settings, "g", 0, 1, 0.01);
+    this.gui.add(this.settings, "b", 0, 1, 0.01);
   }
  
   setupResize() {
@@ -63,6 +68,7 @@ export default class Blob {
   }
  
   addObjects() {
+    const k = this.settings.koeff;
     this.material = new THREE.ShaderMaterial({
       extensions: {
         derivatives: "#extension GL_OES_standard_derivatives : enable"
@@ -71,7 +77,8 @@ export default class Blob {
       blending: THREE.AdditiveBlending,
       uniforms: {
         time: { value: 0 },
-        resolution: { value: new THREE.Vector4() },
+        koeff: { value: k },
+        uColor: { value: new THREE.Vector3(0.9, 0.9, 0.8) },
       },
     //   wireframe: true,
       vertexShader: vertexShader,
@@ -100,6 +107,9 @@ export default class Blob {
     if (!this.isPlaying) return;
     this.time += 0.05;
     this.material.uniforms.time.value = this.time/7;
+    this.material.uniforms.koeff.value = this.settings.koeff;
+    this.color.set(this.settings.r, this.settings.g, this.settings.b);
+    this.material.uniforms.uColor.value = this.color;
     requestAnimationFrame(this.render.bind(this));
     this.renderer.render(this.scene, this.camera);
   }
