@@ -2,6 +2,7 @@ uniform float time;
 varying vec2 vUv;
 varying vec3 vPosition;
 uniform vec2 pixels;
+varying vec3 vNormal;
 float PI = 3.14159265359;
 
 //	Classic Perlin 3D Noise 
@@ -80,13 +81,35 @@ float cnoise(vec3 P){
 }
 
 float distored_pos(vec3 p){
-    float n = cnoise(p + vec3(time));
+    float n = cnoise(p*5. + vec3(time));
 
     return n;
+}
+
+vec3 orthogonal(vec3 n){
+    return normalize(
+        abs(n.x) > abs(n.z) ? vec3(-n.y, n.x, 0.) : vec3(0., -n.z, n.y)
+    );
 }
 
 void main(){
     vUv = uv;
     vec3 displacedposition = position + 0.1*normal*distored_pos(position);
+
+    vec3 eps = vec3(0.001, 0., 0.);
+    vec3 tangent = orthogonal(normal);
+    vec3 bitangent = normalize(cross(tangent, normal));
+    vec3 neighbour1 = position + tangent*0.0001;
+    vec3 neighbour2 = position + bitangent*0.0001;
+
+    vec3 displacedN1 = neighbour1 + 0.1*normal*distored_pos(neighbour1);
+    vec3 displacedN2 = neighbour2 + 0.1*normal*distored_pos(neighbour2);
+
+    vec3 displacedTangent = displacedN1 - displacedposition;
+    vec3 displacedBiTangent = displacedN2 - displacedposition;
+
+    vec3 displacedNormal = normalize(cross(displacedTangent, displacedBiTangent));
+    vNormal = displacedNormal;
+
     gl_Position = projectionMatrix * modelViewMatrix * vec4(displacedposition, 1.0);
 }

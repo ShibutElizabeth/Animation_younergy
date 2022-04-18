@@ -80,7 +80,7 @@ export default class MyScene {
       fragmentShader: fragmentShader,
     });
  
-    this.geometry = new THREE.SphereBufferGeometry(1, 32, 32);
+    this.geometry = new THREE.SphereBufferGeometry(1, 62, 62);
  
     this.plane = new THREE.Mesh(this.geometry, this.material);
     this.scene.add(this.plane);
