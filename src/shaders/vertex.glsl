@@ -82,7 +82,7 @@ float cnoise(vec3 P){
 }
 
 float distored_pos(vec3 p){
-    float n = cnoise(p*2.5 + vec3(time));
+    float n = cnoise(p * 1.2 + vec3(time));
     vNoise = n;
     return n;
 }
