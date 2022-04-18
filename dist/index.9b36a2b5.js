@@ -142,13 +142,13 @@
       this[globalName] = mainExports;
     }
   }
-})({"gXrFj":[function(require,module,exports) {
+})({"2IbcN":[function(require,module,exports) {
 "use strict";
 var HMR_HOST = null;
 var HMR_PORT = null;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
-module.bundle.HMR_BUNDLE_ID = "1553b7605549ea67";
+module.bundle.HMR_BUNDLE_ID = "c13145a79b36a2b5";
 function _toConsumableArray(arr) {
     return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
 }
@@ -513,7 +513,7 @@ function hmrAcceptRun(bundle, id) {
     acceptedAssets[id] = true;
 }
 
-},{}],"kyi8D":[function(require,module,exports) {
+},{}],"cirGC":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _three = require("three");
@@ -524,7 +524,7 @@ var _fragmentGlsl = require("../../shaders/fragment.glsl");
 var _fragmentGlslDefault = parcelHelpers.interopDefault(_fragmentGlsl);
 var _vertexGlsl = require("../../shaders/vertex.glsl");
 var _vertexGlslDefault = parcelHelpers.interopDefault(_vertexGlsl);
-class MyScene {
+class Blob {
     constructor(options){
         this.scene = new _three.Scene();
         this.container = options.dom || document.body;
@@ -549,7 +549,6 @@ class MyScene {
     // this.settings();
     }
     settings() {
-        let that = this;
         this.settings = {
             progress: 0,
             koeff: 2
@@ -568,7 +567,6 @@ class MyScene {
         this.camera.updateProjectionMatrix();
     }
     addObjects() {
-        let that = this;
         this.material = new _three.ShaderMaterial({
             extensions: {
                 derivatives: "#extension GL_OES_standard_derivatives : enable"
@@ -588,7 +586,6 @@ class MyScene {
             fragmentShader: _fragmentGlslDefault.default,
             transparent: true
         });
-        // this.material.transparent = true;
         this.geometry = new _three.SphereBufferGeometry(1, 100, 100);
         this.sphere = new _three.Mesh(this.geometry, this.material);
         this.scene.add(this.sphere);
@@ -610,8 +607,8 @@ class MyScene {
         this.renderer.render(this.scene, this.camera);
     }
 }
-exports.default = MyScene;
-new MyScene({
+exports.default = Blob;
+new Blob({
     dom: document.getElementById("container")
 });
 
@@ -32814,8 +32811,8 @@ exports.default = GUI;
 module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float progress;\nuniform sampler2D texture1;\nuniform vec4 resolution;\nvarying vec2 vUv;\nvarying vec3 vPosition;\nvarying vec3 vNormal;\nvarying float vNoise;\nfloat PI = 3.14159265359;\n\nvoid main(){\n    gl_FragColor = (1. - vNoise) * vec4(0.9, 0.9, 0.7, (1. - vNoise) * 0.07);\n}";
 
 },{}],"kKjfY":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nuniform float time;\nvarying vec2 vUv;\nvarying vec3 vPosition;\nuniform vec2 pixels;\nvarying vec3 vNormal;\nvarying float vNoise;\nfloat PI = 3.14159265359;\n\n//\tClassic Perlin 3D Noise \n//\tby Stefan Gustavson\n//\nvec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}\nvec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}\nvec3 fade(vec3 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}\n\nfloat cnoise(vec3 P){\n  vec3 Pi0 = floor(P); // Integer part for indexing\n  vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1\n  Pi0 = mod(Pi0, 289.0);\n  Pi1 = mod(Pi1, 289.0);\n  vec3 Pf0 = fract(P); // Fractional part for interpolation\n  vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n  vec4 iy = vec4(Pi0.yy, Pi1.yy);\n  vec4 iz0 = Pi0.zzzz;\n  vec4 iz1 = Pi1.zzzz;\n\n  vec4 ixy = permute(permute(ix) + iy);\n  vec4 ixy0 = permute(ixy + iz0);\n  vec4 ixy1 = permute(ixy + iz1);\n\n  vec4 gx0 = ixy0 / 7.0;\n  vec4 gy0 = fract(floor(gx0) / 7.0) - 0.5;\n  gx0 = fract(gx0);\n  vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n  vec4 sz0 = step(gz0, vec4(0.0));\n  gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n  gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n\n  vec4 gx1 = ixy1 / 7.0;\n  vec4 gy1 = fract(floor(gx1) / 7.0) - 0.5;\n  gx1 = fract(gx1);\n  vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n  vec4 sz1 = step(gz1, vec4(0.0));\n  gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n  gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n\n  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);\n  vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);\n  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);\n  vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);\n  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);\n  vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);\n  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);\n  vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);\n\n  vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n  g000 *= norm0.x;\n  g010 *= norm0.y;\n  g100 *= norm0.z;\n  g110 *= norm0.w;\n  vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n  g001 *= norm1.x;\n  g011 *= norm1.y;\n  g101 *= norm1.z;\n  g111 *= norm1.w;\n\n  float n000 = dot(g000, Pf0);\n  float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n  float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n  float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n  float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n  float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n  float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n  float n111 = dot(g111, Pf1);\n\n  vec3 fade_xyz = fade(Pf0);\n  vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n  vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n  float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); \n  return 2.2 * n_xyz;\n}\n\nfloat distored_pos(vec3 p){\n    float n = cnoise(p*1.2 + vec3(time));\n    vNoise = n;\n    return n;\n}\n\nvec3 orthogonal(vec3 n){\n    return normalize(\n        abs(n.x) > abs(n.z) ? vec3(-n.y, n.x, 0.) : vec3(0., -n.z, n.y)\n    );\n}\n\nvoid main(){\n    vUv = uv;\n    vec3 displacedposition = position + 0.1*normal*distored_pos(position);\n\n    vec3 eps = vec3(0.001, 0., 0.);\n    vec3 tangent = orthogonal(normal);\n    vec3 bitangent = normalize(cross(tangent, normal));\n    vec3 neighbour1 = position + tangent*0.0001;\n    vec3 neighbour2 = position + bitangent*0.0001;\n\n    vec3 displacedN1 = neighbour1 + 0.1*normal*distored_pos(neighbour1);\n    vec3 displacedN2 = neighbour2 + 0.1*normal*distored_pos(neighbour2);\n\n    vec3 displacedTangent = displacedN1 - displacedposition;\n    vec3 displacedBiTangent = displacedN2 - displacedposition;\n\n    vec3 displacedNormal = normalize(cross(displacedTangent, displacedBiTangent));\n    vNormal = displacedNormal;\n\n    gl_Position = projectionMatrix * modelViewMatrix * vec4(displacedposition, 1.0);\n}";
+module.exports = "#define GLSLIFY 1\nuniform float time;\nvarying vec2 vUv;\nvarying vec3 vPosition;\nuniform vec2 pixels;\nvarying vec3 vNormal;\nvarying float vNoise;\nfloat PI = 3.14159265359;\n\n//\tClassic Perlin 3D Noise \n//\tby Stefan Gustavson\n//\nvec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}\nvec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}\nvec3 fade(vec3 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}\n\nfloat cnoise(vec3 P){\n  vec3 Pi0 = floor(P); // Integer part for indexing\n  vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1\n  Pi0 = mod(Pi0, 289.0);\n  Pi1 = mod(Pi1, 289.0);\n  vec3 Pf0 = fract(P); // Fractional part for interpolation\n  vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n  vec4 iy = vec4(Pi0.yy, Pi1.yy);\n  vec4 iz0 = Pi0.zzzz;\n  vec4 iz1 = Pi1.zzzz;\n\n  vec4 ixy = permute(permute(ix) + iy);\n  vec4 ixy0 = permute(ixy + iz0);\n  vec4 ixy1 = permute(ixy + iz1);\n\n  vec4 gx0 = ixy0 / 7.0;\n  vec4 gy0 = fract(floor(gx0) / 7.0) - 0.5;\n  gx0 = fract(gx0);\n  vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n  vec4 sz0 = step(gz0, vec4(0.0));\n  gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n  gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n\n  vec4 gx1 = ixy1 / 7.0;\n  vec4 gy1 = fract(floor(gx1) / 7.0) - 0.5;\n  gx1 = fract(gx1);\n  vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n  vec4 sz1 = step(gz1, vec4(0.0));\n  gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n  gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n\n  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);\n  vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);\n  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);\n  vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);\n  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);\n  vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);\n  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);\n  vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);\n\n  vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n  g000 *= norm0.x;\n  g010 *= norm0.y;\n  g100 *= norm0.z;\n  g110 *= norm0.w;\n  vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n  g001 *= norm1.x;\n  g011 *= norm1.y;\n  g101 *= norm1.z;\n  g111 *= norm1.w;\n\n  float n000 = dot(g000, Pf0);\n  float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n  float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n  float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n  float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n  float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n  float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n  float n111 = dot(g111, Pf1);\n\n  vec3 fade_xyz = fade(Pf0);\n  vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n  vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n  float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); \n  return 2.2 * n_xyz;\n}\n\nfloat distored_pos(vec3 p){\n    float n = cnoise(p * 1.2 + vec3(time));\n    vNoise = n;\n    return n;\n}\n\nvec3 orthogonal(vec3 n){\n    return normalize(\n        abs(n.x) > abs(n.z) ? vec3(-n.y, n.x, 0.) : vec3(0., -n.z, n.y)\n    );\n}\n\nvoid main(){\n    vUv = uv;\n    vec3 displacedposition = position + 0.1*normal*distored_pos(position);\n\n    vec3 eps = vec3(0.001, 0., 0.);\n    vec3 tangent = orthogonal(normal);\n    vec3 bitangent = normalize(cross(tangent, normal));\n    vec3 neighbour1 = position + tangent*0.0001;\n    vec3 neighbour2 = position + bitangent*0.0001;\n\n    vec3 displacedN1 = neighbour1 + 0.1*normal*distored_pos(neighbour1);\n    vec3 displacedN2 = neighbour2 + 0.1*normal*distored_pos(neighbour2);\n\n    vec3 displacedTangent = displacedN1 - displacedposition;\n    vec3 displacedBiTangent = displacedN2 - displacedposition;\n\n    vec3 displacedNormal = normalize(cross(displacedTangent, displacedBiTangent));\n    vNormal = displacedNormal;\n\n    gl_Position = projectionMatrix * modelViewMatrix * vec4(displacedposition, 1.0);\n}";
 
-},{}]},["gXrFj","kyi8D"], "kyi8D", "parcelRequire8d86")
+},{}]},["2IbcN","cirGC"], "cirGC", "parcelRequire8d86")
 
-//# sourceMappingURL=index.5549ea67.js.map
+//# sourceMappingURL=index.9b36a2b5.js.map
