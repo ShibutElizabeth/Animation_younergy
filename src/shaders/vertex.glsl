@@ -3,6 +3,7 @@ varying vec2 vUv;
 varying vec3 vPosition;
 uniform vec2 pixels;
 varying vec3 vNormal;
+varying float vNoise;
 float PI = 3.14159265359;
 
 //	Classic Perlin 3D Noise 
@@ -81,8 +82,8 @@ float cnoise(vec3 P){
 }
 
 float distored_pos(vec3 p){
-    float n = cnoise(p*5. + vec3(time));
-
+    float n = cnoise(p*2.5 + vec3(time));
+    vNoise = n;
     return n;
 }
 

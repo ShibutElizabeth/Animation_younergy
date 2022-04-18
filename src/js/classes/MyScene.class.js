@@ -6,7 +6,6 @@ import vertexShader from '../../shaders/vertex.glsl';
 
 export default class MyScene {
   constructor(options) {
-    console.log('scene')
     this.scene = new THREE.Scene();
  
     this.container = options.dom || document.body;
@@ -15,7 +14,7 @@ export default class MyScene {
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setClearColor(0xeeeeee, 1); 
+    this.renderer.setClearColor(0xf0712c, 1); 
     this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
  
@@ -78,7 +77,9 @@ export default class MyScene {
       // transparent: true,
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
+      transparent: true,
     });
+    // this.material.transparent = true;
  
     this.geometry = new THREE.SphereBufferGeometry(1, 62, 62);
  
