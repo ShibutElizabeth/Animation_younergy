@@ -80,7 +80,7 @@ export default class MyScene {
       fragmentShader: fragmentShader,
     });
  
-    this.geometry = new THREE.PlaneGeometry(1, 1, 1, 1);
+    this.geometry = new THREE.SphereBufferGeometry(1, 32, 32);
  
     this.plane = new THREE.Mesh(this.geometry, this.material);
     this.scene.add(this.plane);
@@ -100,7 +100,7 @@ export default class MyScene {
   render() {
     if (!this.isPlaying) return;
     this.time += 0.05;
-    this.material.uniforms.time.value = this.time;
+    this.material.uniforms.time.value = this.time/10;
     requestAnimationFrame(this.render.bind(this));
     this.renderer.render(this.scene, this.camera);
   }
