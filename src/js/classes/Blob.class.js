@@ -7,7 +7,6 @@ import vertexShader from '../../shaders/vertex.glsl';
 
 export default class Blob {
   constructor(options) {
-    console.log('scene');
     this.scene = new THREE.Scene();
  
     this.container = options.dom;

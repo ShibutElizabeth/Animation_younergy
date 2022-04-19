@@ -44558,7 +44558,6 @@ var Blob = /*#__PURE__*/function () {
   function Blob(options) {
     _classCallCheck(this, Blob);
 
-    console.log('scene');
     this.scene = new THREE.Scene();
     this.container = options.dom;
     this.width = this.container.offsetWidth;
@@ -44704,7 +44703,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52018" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59475" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
