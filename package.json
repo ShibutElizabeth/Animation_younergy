@@ -1,0 +1,18 @@
+{
+  "name": "younergy",
+  "source": "src/index.html",
+  "scripts": {
+    "serve": "parcel serve ./src/*.html",
+    "build": "parcel build ./src/*.html"
+  },
+  "authors": "Coderiver <html@coderiver.com.ua>",
+  "devDependencies": {
+    "parcel": "latest",
+    "parcel-bundler": "^1.12.5"
+  },
+  "dependencies": {
+    "gsap": "^3.10.3",
+    "lil-gui": "^0.16.1",
+    "three": "^0.139.2"
+  }
+}

@@ -1,3 +1,4 @@
+import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import GUI from 'lil-gui';
@@ -6,15 +7,16 @@ import vertexShader from '../../shaders/vertex.glsl';
 
 export default class Blob {
   constructor(options) {
+    console.log('scene');
     this.scene = new THREE.Scene();
  
-    this.container = options.dom || document.body;
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
+    this.container = options.dom;
+    this.width = this.container.offsetWidth;
+    this.height = this.container.offsetHeight;
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setClearColor(0xf0712c, 1); 
+    this.renderer.setClearColor(0xf0712c, 0); 
     this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
  
@@ -28,7 +30,7 @@ export default class Blob {
     );
 
     this.camera.position.set(0, 0, 1.8);
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.time = 0;
     this.color = new THREE.Vector3(0.9, 0.9, 0.8);
  
@@ -116,5 +118,5 @@ export default class Blob {
 }
  
 new Blob({
-  dom: document.getElementById("container")
+  dom: document.querySelector("#container")
 });

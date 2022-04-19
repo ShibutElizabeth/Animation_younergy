@@ -1,0 +1,43 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.content {
+    width: 100%;
+    /* height: fit-content; */
+    position: relative;
+}
+
+.content__container {
+    width: 100vw;
+    height: 100vh;
+    background-color: transparent;
+    position: fixed;
+    z-index: 8;
+    top: 0;
+    left: 0;
+}
+
+.content__container canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.content__section {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    background-color: white;
+}
+
+.content__section--orange{
+    background-color: #f0712c;
+}
+
+/*# sourceMappingURL=/default.d24c6347.css.map */
