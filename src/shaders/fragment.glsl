@@ -3,5 +3,5 @@ uniform vec3 uColor;
 varying float vNoise;
 
 void main(){
-    gl_FragColor = (1. - vNoise) * vec4(uColor, (1. - vNoise) * 0.07);
+    gl_FragColor = (1. - vNoise) * vec4(uColor, 0.6);
 }

@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import GUI from 'lil-gui';
 import fragmentShader from '../../shaders/fragment.glsl';
 import vertexShader from '../../shaders/vertex.glsl';
+import Animation from './Animation.class';
 
 export default class Blob {
   constructor(options) {
@@ -20,18 +21,18 @@ export default class Blob {
     this.renderer.outputEncoding = THREE.sRGBEncoding;
  
     this.container.appendChild(this.renderer.domElement);
- 
-    this.camera = new THREE.PerspectiveCamera(
-      70,
-      window.innerWidth / window.innerHeight,
-      0.001,
-      1000
-    );
+
+    this.camera = new THREE.OrthographicCamera(
+      this.width / - 600,
+      this.width / 600,
+      this.height / 600,
+      this.height / -600,
+      - 500,
+      1000);
 
     this.camera.position.set(0, 0, 1.8);
-    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.time = 0;
-    this.color = new THREE.Vector3(0.9, 0.9, 0.8);
+    this.color = new THREE.Vector3(0.94, 0.44, 0.17);
  
     this.isPlaying = true;
  
@@ -39,27 +40,34 @@ export default class Blob {
     this.addObjects();
     this.resize();
     this.render();
-    this.setupResize();
+    this.setupListeners();
+    
   }
  
   settings() {
     this.settings = {
-      koeff: 1.2,
-      r: 0.9,
-      g: 0.9,
-      b: 0.8,
+      koeff: 2.2,
+      r: 0.94,
+      g: 0.44,
+      b: 0.17,
     };
-    this.gui = new GUI();
-    this.gui.add(this.settings, "koeff", 0, 10, 0.1);
-    this.gui.add(this.settings, "r", 0, 1, 0.01);
-    this.gui.add(this.settings, "g", 0, 1, 0.01);
-    this.gui.add(this.settings, "b", 0, 1, 0.01);
+    // this.gui = new GUI();
+    // this.gui.add(this.settings, "koeff", 0, 10, 0.1);
+    // this.gui.add(this.settings, "r", 0, 1, 0.01);
+    // this.gui.add(this.settings, "g", 0, 1, 0.01);
+    // this.gui.add(this.settings, "b", 0, 1, 0.01);
   }
  
-  setupResize() {
+  setupListeners() {
+    this.mouse = {
+      moved: false,
+      x: 0,
+      y: 0,
+    };
     window.addEventListener("resize", this.resize.bind(this));
+    window.addEventListener("mousemove", this.mousemove.bind(this));
   }
- 
+
   resize() {
     this.width = this.container.offsetWidth;
     this.height = this.container.offsetHeight;
@@ -75,7 +83,7 @@ export default class Blob {
         derivatives: "#extension GL_OES_standard_derivatives : enable"
       },
       side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
+      // blending: THREE.AdditiveBlending,
       uniforms: {
         time: { value: 0 },
         koeff: { value: k },
@@ -84,13 +92,22 @@ export default class Blob {
     //   wireframe: true,
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
-      transparent: true,
+      // transparent: true,
     });
  
     this.geometry = new THREE.SphereBufferGeometry(1, 100, 100);
  
     this.sphere = new THREE.Mesh(this.geometry, this.material);
     this.scene.add(this.sphere);
+    new Animation(this.sphere, this.camera);
+  }
+  
+  mousemove(event){
+    // console.log(this.mouse);
+    // this.sphere.rotateY(-1*(this.mouse.x - event.x)/1000);
+    // this.sphere.rotateX(-1*(this.mouse.y - event.y)/1000);
+    this.mouse.x = event.x;
+    this.mouse.y = event.y;
   }
  
   stop() {
