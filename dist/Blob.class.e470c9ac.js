@@ -52545,17 +52545,40 @@ var global = arguments[3];
 
 })));
 
-},{}],"js/classes/Animation.class.js":[function(require,module,exports) {
+},{}],"js/utils/changeState.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.changePosition = changePosition;
+exports.changeSize = changeSize;
+
+var _gsap = require("gsap");
+
+function changePosition(target, options) {
+  return _gsap.gsap.to(target, {
+    x: options.x || 0,
+    duration: options.duration || 1,
+    ease: options.ease || "none"
+  });
+}
+
+function changeSize(target, options) {
+  return _gsap.gsap.to(target, {
+    x: options.size || 4,
+    y: options.size || 4,
+    z: options.size || 4,
+    duration: options.duration || 1
+  });
+}
+},{"gsap":"../node_modules/gsap/index.js"}],"js/classes/Animation.class.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-exports.toRightPosition = toRightPosition;
-exports.toRightSize = toRightSize;
-exports.toThisPosition = toThisPosition;
-exports.toThisSize = toThisSize;
 
 require("regenerator-runtime/runtime");
 
@@ -52564,6 +52587,8 @@ var _gsap = require("gsap");
 var _ScrollTrigger = _interopRequireDefault(require("gsap/dist/ScrollTrigger"));
 
 var _ScrollToPlugin = _interopRequireDefault(require("gsap/dist/ScrollToPlugin"));
+
+var _changeState = require("../utils/changeState");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -52594,10 +52619,14 @@ var Animation = /*#__PURE__*/function () {
           trigger: '#section-1',
           start: 'top+=10px bottom',
           end: 'bottom-=400px top',
-          scrub: 1,
+          scrub: 2,
           onEnterBack: function onEnterBack() {
-            toThisPosition(that.target.position);
-            toThisSize(that.target.scale);
+            (0, _changeState.changePosition)(that.target.position, {
+              x: 0
+            });
+            (0, _changeState.changeSize)(that.target.scale, {
+              size: 4
+            });
           }
         }
       });
@@ -52607,10 +52636,16 @@ var Animation = /*#__PURE__*/function () {
           trigger: '#section-2',
           start: 'top+=10px bottom',
           end: 'bottom-=10px top',
-          scrub: 1,
+          scrub: 2,
           onEnter: function onEnter() {
-            toRightPosition(that.target.position);
-            toRightSize(that.target.scale);
+            (0, _changeState.changePosition)(that.target.position, {
+              x: 4,
+              duration: 2,
+              ease: 'elastic.out(1.2, 0.7)'
+            });
+            (0, _changeState.changeSize)(that.target.scale, {
+              size: 2.5
+            });
           }
         }
       });
@@ -52621,40 +52656,7 @@ var Animation = /*#__PURE__*/function () {
 }();
 
 exports.default = Animation;
-
-function toThisPosition(target) {
-  return _gsap.gsap.to(target, {
-    x: 0,
-    duration: 1
-  });
-}
-
-function toRightPosition(target) {
-  return _gsap.gsap.to(target, {
-    x: 4,
-    duration: 2,
-    ease: 'elastic.out(1.2, 0.7)'
-  });
-}
-
-function toThisSize(target) {
-  return _gsap.gsap.to(target, {
-    x: 4,
-    y: 4,
-    z: 4,
-    duration: 1
-  });
-}
-
-function toRightSize(target) {
-  return _gsap.gsap.to(target, {
-    x: 2.5,
-    y: 2.5,
-    z: 2.5,
-    duration: 1
-  });
-}
-},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","gsap":"../node_modules/gsap/index.js","gsap/dist/ScrollTrigger":"../node_modules/gsap/dist/ScrollTrigger.js","gsap/dist/ScrollToPlugin":"../node_modules/gsap/dist/ScrollToPlugin.js"}],"js/classes/Blob.class.js":[function(require,module,exports) {
+},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","gsap":"../node_modules/gsap/index.js","gsap/dist/ScrollTrigger":"../node_modules/gsap/dist/ScrollTrigger.js","gsap/dist/ScrollToPlugin":"../node_modules/gsap/dist/ScrollToPlugin.js","../utils/changeState":"js/utils/changeState.js"}],"js/classes/Blob.class.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
