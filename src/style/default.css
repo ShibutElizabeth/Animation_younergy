@@ -8,7 +8,6 @@ body {
 
 .content {
     width: 100%;
-    /* height: fit-content; */
     position: relative;
 }
 
@@ -34,6 +33,7 @@ body {
     height: 100vh;
     position: relative;
     background-color: white;
+    border: 1px solid black;
 }
 
 .content__section--orange{

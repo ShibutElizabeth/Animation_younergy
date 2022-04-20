@@ -50,37 +50,24 @@ export function toThisPosition (target) {
 }
 export function toRightPosition (target) {
     return gsap.to(target, {
-        x: 1,
+        x: 4,
         duration: 2,
-        // keyframes: {
-        //     x: [0, 1.4, 1],
-        // },
         ease: 'elastic.out(1.2, 0.7)'
     });
 }
 export function toThisSize (target) {
     return gsap.to(target, {
-      x: 1,
-      y: 1,
+      x: 4,
+      y: 4,
+      z: 4,
       duration: 1,
     });
 }
 export function toRightSize (target) {
-    const f = () => {
-        gsap.to(target, {
-            // keyframes: {
-            //     x: [1, 0.7, 0.3, 0.5],
-            //     y: [1, 1.2, 1, 0.5],
-            // },
-        //   x: 0.5,
-          y: 0.5,
-            duration: 1,
-            ease: 'back.in(3)'
-        });
-        gsap.to(target, {
-            x: 0.5,
-            duration: 1,
-        });
-    }
-    return f();
+    return gsap.to(target, {
+        x: 2.5,
+        y: 2.5,
+        z: 2.5,
+        duration: 1,
+    });
 }

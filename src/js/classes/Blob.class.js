@@ -1,6 +1,5 @@
 import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import GUI from 'lil-gui';
 import fragmentShader from '../../shaders/fragment.glsl';
 import vertexShader from '../../shaders/vertex.glsl';
@@ -19,25 +18,29 @@ export default class Blob {
     this.renderer.setClearColor(0xf0712c, 0); 
     this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
  
     this.container.appendChild(this.renderer.domElement);
 
-    this.camera = new THREE.OrthographicCamera(
-      this.width / - 600,
-      this.width / 600,
-      this.height / 600,
-      this.height / -600,
-      - 500,
-      1000);
+    // this.camera = new THREE.OrthographicCamera(
+    //   this.width / - 600,
+    //   this.width / 600,
+    //   this.height / 600,
+    //   this.height / -600,
+    //   - 500,
+    //   1000);
 
-    this.camera.position.set(0, 0, 1.8);
+    this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
+
+    this.camera.position.set(0, 0, 11);
     this.time = 0;
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
  
     this.isPlaying = true;
- 
+
     this.settings();
-    this.addObjects();
+    this.addBlob();
     this.resize();
     this.render();
     this.setupListeners();
@@ -76,36 +79,33 @@ export default class Blob {
     this.camera.updateProjectionMatrix(); 
   }
  
-  addObjects() {
+  addBlob() {
     const k = this.settings.koeff;
     this.material = new THREE.ShaderMaterial({
       extensions: {
         derivatives: "#extension GL_OES_standard_derivatives : enable"
       },
       side: THREE.DoubleSide,
-      // blending: THREE.AdditiveBlending,
       uniforms: {
         time: { value: 0 },
         koeff: { value: k },
         uColor: { value: new THREE.Vector3(0.9, 0.9, 0.8) },
       },
-    //   wireframe: true,
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
-      // transparent: true,
     });
  
     this.geometry = new THREE.SphereBufferGeometry(1, 100, 100);
  
     this.sphere = new THREE.Mesh(this.geometry, this.material);
+    this.sphere.scale.set(4, 4, 4);
     this.scene.add(this.sphere);
     new Animation(this.sphere, this.camera);
   }
   
   mousemove(event){
-    // console.log(this.mouse);
-    // this.sphere.rotateY(-1*(this.mouse.x - event.x)/1000);
-    // this.sphere.rotateX(-1*(this.mouse.y - event.y)/1000);
+    this.sphere.rotateY(-1*(this.mouse.x - event.x)/1000);
+    this.sphere.rotateX(-1*(this.mouse.y - event.y)/1000);
     this.mouse.x = event.x;
     this.mouse.y = event.y;
   }
