@@ -1,6 +1,7 @@
 import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
 import GUI from 'lil-gui';
+import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes';
 import fragmentShader from '../../shaders/fragment.glsl';
 import vertexShader from '../../shaders/vertex.glsl';
 import Animation from './Animation.class';
@@ -22,28 +23,23 @@ export default class Blob {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
  
     this.container.appendChild(this.renderer.domElement);
-
-    // this.camera = new THREE.OrthographicCamera(
-    //   this.width / - 600,
-    //   this.width / 600,
-    //   this.height / 600,
-    //   this.height / -600,
-    //   - 500,
-    //   1000);
-
     this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
 
-    this.camera.position.set(0, 0, 11);
+    this.camera.position.set(0, 0, 2.8);
+
     this.time = 0;
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
  
     this.isPlaying = true;
 
+
     this.settings();
     this.addBlob();
+    // this.addMarching();
     this.resize();
     this.render();
     this.setupListeners();
+    
     
   }
  
@@ -98,7 +94,6 @@ export default class Blob {
     this.geometry = new THREE.SphereBufferGeometry(1, 100, 100);
  
     this.sphere = new THREE.Mesh(this.geometry, this.material);
-    this.sphere.scale.set(4, 4, 4);
     this.scene.add(this.sphere);
     new Animation(this.sphere, this.camera);
   }
@@ -128,9 +123,23 @@ export default class Blob {
     this.material.uniforms.koeff.value = this.settings.koeff;
     this.color.set(this.settings.r, this.settings.g, this.settings.b);
     this.material.uniforms.uColor.value = this.color;
+
     requestAnimationFrame(this.render.bind(this));
     this.renderer.render(this.scene, this.camera);
   }
+
+  addMarching(){
+    this.resolution = 28;
+    this.effect = new MarchingCubes(this.resolution, this.material, true, true, 100000);
+    this.effect.position.set( 0, 0, 0 );
+		this.effect.scale.set( 700, 700, 700 );
+    this.effect.enableUvs = false;
+		this.effect.enableColors = false;
+    this.effect.isolation = 68;
+    this.scene.add(this.effect);
+  }
+
+  
 }
  
 new Blob({

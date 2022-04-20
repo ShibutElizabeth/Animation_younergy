@@ -9,9 +9,9 @@ export function changePosition (target, options) {
 }
 export function changeSize (target, options) {
     return gsap.to(target, {
-      x: options.size || 4,
-      y: options.size || 4,
-      z: options.size || 4,
+      x: options.size || 1,
+      y: options.size || 1,
+      z: options.size || 1,
       duration: options.duration || 1,
     });
 }
