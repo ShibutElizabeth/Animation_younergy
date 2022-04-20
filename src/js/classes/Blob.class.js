@@ -1,7 +1,8 @@
 import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import GUI from 'lil-gui';
-import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes';
 import fragmentShader from '../../shaders/fragment.glsl';
 import vertexShader from '../../shaders/vertex.glsl';
 import Animation from './Animation.class';
@@ -31,16 +32,14 @@ export default class Blob {
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
  
     this.isPlaying = true;
-
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     this.settings();
     this.addBlob();
-    // this.addMarching();
+    this.gltfModelLoad();
     this.resize();
     this.render();
     this.setupListeners();
-    
-    
   }
  
   settings() {
@@ -123,23 +122,71 @@ export default class Blob {
     this.material.uniforms.koeff.value = this.settings.koeff;
     this.color.set(this.settings.r, this.settings.g, this.settings.b);
     this.material.uniforms.uColor.value = this.color;
-
     requestAnimationFrame(this.render.bind(this));
     this.renderer.render(this.scene, this.camera);
   }
 
-  addMarching(){
-    this.resolution = 28;
-    this.effect = new MarchingCubes(this.resolution, this.material, true, true, 100000);
-    this.effect.position.set( 0, 0, 0 );
-		this.effect.scale.set( 700, 700, 700 );
-    this.effect.enableUvs = false;
-		this.effect.enableColors = false;
-    this.effect.isolation = 68;
-    this.scene.add(this.effect);
-  }
+  gltfModelLoad() {
+		const loader = new GLTFLoader();
+		const ipads = './././sc.gltf';
+    // const texUrl = '../../models/model2/theme1.jpg';
 
-  
+    // const textureLoader = new THREE.TextureLoader();
+    // const texture = textureLoader.load(texUrl);
+    // texture.flipY = false;
+    // const material = new THREE.MeshBasicMaterial( { map: texture } );
+    // const texture2 = textureLoader.load(texUrl2);
+    // texture2.flipY = false;
+    // const material2 = new THREE.MeshBasicMaterial( { map: texture2 } );
+
+    
+    loader.load(ipads, gltf =>  {
+			const root = gltf.scene;
+      this.ipads = [];
+      this.ipads.push(
+        root.getObjectByName('Empty_Object_6'),
+        root.getObjectByName('Empty_Object_4'),
+        root.getObjectByName('Empty_Object_7')
+      );
+      this.ipads.forEach((ipad, idx) => {
+        ipad.scale.set(0.002, 0.002, 0.002);
+        ipad.rotation.set(0, 0, 0);
+        if(idx === 0){
+          ipad.position.set(0, 0, 0);
+          ipad.rotateY(Math.PI/2);
+        } else if(idx == 1){
+          ipad.position.set(0, 0, 2.1);
+        } else {
+          ipad.position.set(0, 0, 0);
+          ipad.rotateY(-Math.PI/2);
+        }
+        this.scene.add(ipad);
+        console.log(this.dumpObject(ipad).join('\n'));
+      });
+      // tvs["children"].forEach(tv => {
+      //   tv["material"] = material;
+      // });
+      // const screens = root.getObjectByName('POD_Schermo');
+      // screens["children"].forEach(sc => {
+      //   sc["material"] = material2;
+      // });
+			
+			
+		});
+	}
+
+	dumpObject(obj, lines = [], isLast = true, prefix = '') {
+		const localPrefix = isLast ? '└─' : '├─';
+		lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}]`);
+		const newPrefix = prefix + (isLast ? '  ' : '│ ');
+		const lastNdx = obj.children.length - 1;
+		obj.children.forEach((child, ndx) => {
+			const isLast = ndx === lastNdx;
+			this.dumpObject(child, lines, isLast, newPrefix);
+		});
+		return lines;
+	}
+
 }
  
 new Blob({
