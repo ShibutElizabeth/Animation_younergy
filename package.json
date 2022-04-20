@@ -8,16 +8,11 @@
   "authors": "Coderiver <html@coderiver.com.ua>",
   "devDependencies": {
     "parcel": "latest",
-    "parcel-bundler": "^1.12.5",
-    "parcel-plugin-static-files-copy": "^2.6.0"
+    "parcel-bundler": "^1.12.5"
   },
   "dependencies": {
     "gsap": "^3.10.3",
     "lil-gui": "^0.16.1",
     "three": "^0.139.2"
-  },
-  "staticFiles": {
-    "staticPath": "src/static",
-    "watcherGlob": "**"
   }
 }

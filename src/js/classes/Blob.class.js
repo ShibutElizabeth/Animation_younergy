@@ -32,7 +32,8 @@ export default class Blob {
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
  
     this.isPlaying = true;
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.ipads = [];
+    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     this.settings();
     this.addBlob();
@@ -94,7 +95,7 @@ export default class Blob {
  
     this.sphere = new THREE.Mesh(this.geometry, this.material);
     this.scene.add(this.sphere);
-    new Animation(this.sphere, this.camera);
+    new Animation(this.camera, this.sphere, this.ipads);
   }
   
   mousemove(event){
@@ -128,50 +129,36 @@ export default class Blob {
 
   gltfModelLoad() {
 		const loader = new GLTFLoader();
-		const ipads = './././sc.gltf';
-    // const texUrl = '../../models/model2/theme1.jpg';
-
-    // const textureLoader = new THREE.TextureLoader();
-    // const texture = textureLoader.load(texUrl);
-    // texture.flipY = false;
-    // const material = new THREE.MeshBasicMaterial( { map: texture } );
-    // const texture2 = textureLoader.load(texUrl2);
-    // texture2.flipY = false;
-    // const material2 = new THREE.MeshBasicMaterial( { map: texture2 } );
-
+		const ipads = './././scene.gltf';
     
     loader.load(ipads, gltf =>  {
 			const root = gltf.scene;
-      this.ipads = [];
       this.ipads.push(
         root.getObjectByName('Empty_Object_6'),
         root.getObjectByName('Empty_Object_4'),
         root.getObjectByName('Empty_Object_7')
       );
+      this.group = new THREE.Group();
       this.ipads.forEach((ipad, idx) => {
-        ipad.scale.set(0.002, 0.002, 0.002);
+        ipad.scale.set(0, 0, 0);
         ipad.rotation.set(0, 0, 0);
         if(idx === 0){
-          ipad.position.set(0, 0, 0);
+          ipad.position.set(0.8, 0, 0);
           ipad.rotateY(Math.PI/2);
         } else if(idx == 1){
-          ipad.position.set(0, 0, 2.1);
+          ipad.position.set(0.8, 0, 1.2);
         } else {
-          ipad.position.set(0, 0, 0);
+          ipad.position.set(1.0, 0, 0);
           ipad.rotateY(-Math.PI/2);
         }
-        this.scene.add(ipad);
-        console.log(this.dumpObject(ipad).join('\n'));
+        this.group.add(ipad);
+        
+        // console.log(this.dumpObject(ipad).join('\n'));
       });
-      // tvs["children"].forEach(tv => {
-      //   tv["material"] = material;
-      // });
-      // const screens = root.getObjectByName('POD_Schermo');
-      // screens["children"].forEach(sc => {
-      //   sc["material"] = material2;
-      // });
-			
-			
+      this.box = new THREE.Box3().setFromObject(this.group);
+      this.box.center(new THREE.Vector3(3, 0, 0)); // this re-sets the mesh position
+      this.scene.add(this.box);
+      this.scene.add(this.group);
 		});
 	}
 

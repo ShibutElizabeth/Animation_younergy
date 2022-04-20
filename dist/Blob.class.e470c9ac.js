@@ -56491,6 +56491,7 @@ var _gsap = require("gsap");
 function changePosition(target, options) {
   return _gsap.gsap.to(target, {
     x: options.x || 0,
+    z: options.z || 0,
     duration: options.duration || 1,
     ease: options.ease || "none"
   });
@@ -56533,10 +56534,16 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 _gsap.gsap.registerPlugin(_ScrollTrigger.default, _ScrollToPlugin.default);
 
 var Animation = /*#__PURE__*/function () {
-  function Animation(object, camera) {
+  function Animation(camera) {
     _classCallCheck(this, Animation);
 
-    this.target = object;
+    for (var _len = arguments.length, objects = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      objects[_key - 1] = arguments[_key];
+    }
+
+    console.log(objects);
+    this.target = objects[0];
+    this.ipads = objects[1];
     this.camera = camera;
     this.firstStage();
   }
@@ -56550,7 +56557,7 @@ var Animation = /*#__PURE__*/function () {
         scrollTrigger: {
           trigger: '#section-1',
           start: 'top+=10px bottom',
-          end: 'bottom-=400px top',
+          end: 'bottom-=10px top',
           scrub: 2,
           onEnterBack: function onEnterBack() {
             (0, _changeState.changePosition)(that.target.position, {
@@ -56559,6 +56566,18 @@ var Animation = /*#__PURE__*/function () {
             (0, _changeState.changeSize)(that.target.scale, {
               size: 1
             });
+            (0, _changeState.changeSize)(that.ipads[2].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
+            (0, _changeState.changeSize)(that.ipads[1].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
+            (0, _changeState.changeSize)(that.ipads[0].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
           }
         }
       });
@@ -56566,17 +56585,65 @@ var Animation = /*#__PURE__*/function () {
       _gsap.gsap.timeline({
         scrollTrigger: {
           trigger: '#section-2',
-          start: 'top+=10px bottom',
+          start: 'top 35%',
           end: 'bottom-=10px top',
           scrub: 2,
           onEnter: function onEnter() {
             (0, _changeState.changePosition)(that.target.position, {
               x: 1,
               duration: 2,
-              ease: 'elastic.out(1.2, 0.7)'
+              ease: 'elastic.out(1, 0.7)'
             });
             (0, _changeState.changeSize)(that.target.scale, {
               size: 0.5
+            });
+            (0, _changeState.changeSize)(that.ipads[0].scale, {
+              size: 0.0008
+            });
+            (0, _changeState.changeSize)(that.ipads[1].scale, {
+              size: 0.0008
+            });
+            (0, _changeState.changeSize)(that.ipads[2].scale, {
+              size: 0.0008
+            });
+          },
+          onLeave: function onLeave() {
+            (0, _changeState.changeSize)(that.ipads[2].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
+            (0, _changeState.changeSize)(that.ipads[1].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
+            (0, _changeState.changeSize)(that.ipads[0].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
+          },
+          onEnterBack: function onEnterBack() {
+            (0, _changeState.changeSize)(that.ipads[0].scale, {
+              size: 0.0008
+            });
+            (0, _changeState.changeSize)(that.ipads[1].scale, {
+              size: 0.0008
+            });
+            (0, _changeState.changeSize)(that.ipads[2].scale, {
+              size: 0.0008
+            });
+          },
+          onLeaveBack: function onLeaveBack() {
+            (0, _changeState.changeSize)(that.ipads[2].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
+            (0, _changeState.changeSize)(that.ipads[1].scale, {
+              size: 0.000000001,
+              duration: 0.1
+            });
+            (0, _changeState.changeSize)(that.ipads[0].scale, {
+              size: 0.000000001,
+              duration: 0.1
             });
           }
         }
@@ -56646,7 +56713,8 @@ var Blob = /*#__PURE__*/function () {
     this.time = 0;
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
     this.isPlaying = true;
-    this.controls = new _OrbitControls.OrbitControls(this.camera, this.renderer.domElement);
+    this.ipads = []; // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+
     this.settings();
     this.addBlob();
     this.gltfModelLoad();
@@ -56715,7 +56783,7 @@ var Blob = /*#__PURE__*/function () {
       this.geometry = new THREE.SphereBufferGeometry(1, 100, 100);
       this.sphere = new THREE.Mesh(this.geometry, this.material);
       this.scene.add(this.sphere);
-      new _Animation.default(this.sphere, this.camera);
+      new _Animation.default(this.camera, this.sphere, this.ipads);
     }
   }, {
     key: "mousemove",
@@ -56756,46 +56824,40 @@ var Blob = /*#__PURE__*/function () {
       var _this = this;
 
       var loader = new _GLTFLoader.GLTFLoader();
-      var ipads = './././sc.gltf'; // const texUrl = '../../models/model2/theme1.jpg';
-      // const textureLoader = new THREE.TextureLoader();
-      // const texture = textureLoader.load(texUrl);
-      // texture.flipY = false;
-      // const material = new THREE.MeshBasicMaterial( { map: texture } );
-      // const texture2 = textureLoader.load(texUrl2);
-      // texture2.flipY = false;
-      // const material2 = new THREE.MeshBasicMaterial( { map: texture2 } );
-
+      var ipads = './././scene.gltf';
       loader.load(ipads, function (gltf) {
         var root = gltf.scene;
-        _this.ipads = [];
 
         _this.ipads.push(root.getObjectByName('Empty_Object_6'), root.getObjectByName('Empty_Object_4'), root.getObjectByName('Empty_Object_7'));
 
+        _this.group = new THREE.Group();
+
         _this.ipads.forEach(function (ipad, idx) {
-          ipad.scale.set(0.002, 0.002, 0.002);
+          ipad.scale.set(0, 0, 0);
           ipad.rotation.set(0, 0, 0);
 
           if (idx === 0) {
-            ipad.position.set(0, 0, 0);
+            ipad.position.set(0.8, 0, 0);
             ipad.rotateY(Math.PI / 2);
           } else if (idx == 1) {
-            ipad.position.set(0, 0, 2.1);
+            ipad.position.set(0.8, 0, 1.2);
           } else {
-            ipad.position.set(0, 0, 0);
+            ipad.position.set(1.0, 0, 0);
             ipad.rotateY(-Math.PI / 2);
           }
 
-          _this.scene.add(ipad);
+          _this.group.add(ipad); // console.log(this.dumpObject(ipad).join('\n'));
 
-          console.log(_this.dumpObject(ipad).join('\n'));
-        }); // tvs["children"].forEach(tv => {
-        //   tv["material"] = material;
-        // });
-        // const screens = root.getObjectByName('POD_Schermo');
-        // screens["children"].forEach(sc => {
-        //   sc["material"] = material2;
-        // });
+        });
 
+        _this.box = new THREE.Box3().setFromObject(_this.group);
+
+        _this.box.center(new THREE.Vector3(3, 0, 0)); // this re-sets the mesh position
+
+
+        _this.scene.add(_this.box);
+
+        _this.scene.add(_this.group);
       });
     }
   }, {
@@ -56854,7 +56916,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56964" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63982" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
