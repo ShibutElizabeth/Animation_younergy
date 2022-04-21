@@ -41539,7 +41539,2986 @@ if (typeof window !== 'undefined') {
     window.__THREE__ = REVISION;
   }
 }
-},{}],"../node_modules/gsap/gsap-core.js":[function(require,module,exports) {
+},{}],"../node_modules/lil-gui/dist/lil-gui.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.StringController = exports.OptionController = exports.NumberController = exports.GUI = exports.FunctionController = exports.Controller = exports.ColorController = exports.BooleanController = void 0;
+
+/**
+ * lil-gui
+ * https://lil-gui.georgealways.com
+ * @version 0.16.1
+ * @author George Michael Brower
+ * @license MIT
+ */
+
+/**
+ * Base class for all controllers.
+ */
+class Controller {
+  constructor(parent, object, property, className, widgetTag = 'div') {
+    /**
+     * The GUI that contains this controller.
+     * @type {GUI}
+     */
+    this.parent = parent;
+    /**
+     * The object this controller will modify.
+     * @type {object}
+     */
+
+    this.object = object;
+    /**
+     * The name of the property to control.
+     * @type {string}
+     */
+
+    this.property = property;
+    /**
+     * Used to determine if the controller is disabled.
+     * Use `controller.disable( true|false )` to modify this value
+     * @type {boolean}
+     */
+
+    this._disabled = false;
+    /**
+     * The value of `object[ property ]` when the controller was created.
+     * @type {any}
+     */
+
+    this.initialValue = this.getValue();
+    /**
+     * The outermost container DOM element for this controller.
+     * @type {HTMLElement}
+     */
+
+    this.domElement = document.createElement('div');
+    this.domElement.classList.add('controller');
+    this.domElement.classList.add(className);
+    /**
+     * The DOM element that contains the controller's name.
+     * @type {HTMLElement}
+     */
+
+    this.$name = document.createElement('div');
+    this.$name.classList.add('name');
+    Controller.nextNameID = Controller.nextNameID || 0;
+    this.$name.id = `lil-gui-name-${++Controller.nextNameID}`;
+    /**
+     * The DOM element that contains the controller's "widget" (which differs by controller type).
+     * @type {HTMLElement}
+     */
+
+    this.$widget = document.createElement(widgetTag);
+    this.$widget.classList.add('widget');
+    /**
+     * The DOM element that receives the disabled attribute when using disable()
+     * @type {HTMLElement}
+     */
+
+    this.$disable = this.$widget;
+    this.domElement.appendChild(this.$name);
+    this.domElement.appendChild(this.$widget);
+    this.parent.children.push(this);
+    this.parent.controllers.push(this);
+    this.parent.$children.appendChild(this.domElement);
+    this._listenCallback = this._listenCallback.bind(this);
+    this.name(property);
+  }
+  /**
+   * Sets the name of the controller and its label in the GUI.
+   * @param {string} name
+   * @returns {this}
+   */
+
+
+  name(name) {
+    /**
+     * The controller's name. Use `controller.name( 'Name' )` to modify this value.
+     * @type {string}
+     */
+    this._name = name;
+    this.$name.innerHTML = name;
+    return this;
+  }
+  /**
+   * Pass a function to be called whenever the value is modified by this controller.
+   * The function receives the new value as its first parameter. The value of `this` will be the
+   * controller.
+   * @param {Function} callback
+   * @returns {this}
+   * @example
+   * const controller = gui.add( object, 'property' );
+   *
+   * controller.onChange( function( v ) {
+   * 	console.log( 'The value is now ' + v );
+   * 	console.assert( this === controller );
+   * } );
+   */
+
+
+  onChange(callback) {
+    /**
+     * Used to access the function bound to `onChange` events. Don't modify this value directly.
+     * Use the `controller.onChange( callback )` method instead.
+     * @type {Function}
+     */
+    this._onChange = callback;
+    return this;
+  }
+  /**
+   * Calls the onChange methods of this controller and its parent GUI.
+   * @protected
+   */
+
+
+  _callOnChange() {
+    this.parent._callOnChange(this);
+
+    if (this._onChange !== undefined) {
+      this._onChange.call(this, this.getValue());
+    }
+
+    this._changed = true;
+  }
+  /**
+   * Pass a function to be called after this controller has been modified and loses focus.
+   * @param {Function} callback
+   * @returns {this}
+   * @example
+   * const controller = gui.add( object, 'property' );
+   *
+   * controller.onFinishChange( function( v ) {
+   * 	console.log( 'Changes complete: ' + v );
+   * 	console.assert( this === controller );
+   * } );
+   */
+
+
+  onFinishChange(callback) {
+    /**
+     * Used to access the function bound to `onFinishChange` events. Don't modify this value
+     * directly. Use the `controller.onFinishChange( callback )` method instead.
+     * @type {Function}
+     */
+    this._onFinishChange = callback;
+    return this;
+  }
+  /**
+   * Should be called by Controller when its widgets lose focus.
+   * @protected
+   */
+
+
+  _callOnFinishChange() {
+    if (this._changed) {
+      this.parent._callOnFinishChange(this);
+
+      if (this._onFinishChange !== undefined) {
+        this._onFinishChange.call(this, this.getValue());
+      }
+    }
+
+    this._changed = false;
+  }
+  /**
+   * Sets the controller back to its initial value.
+   * @returns {this}
+   */
+
+
+  reset() {
+    this.setValue(this.initialValue);
+
+    this._callOnFinishChange();
+
+    return this;
+  }
+  /**
+   * Enables this controller.
+   * @param {boolean} enabled
+   * @returns {this}
+   * @example
+   * controller.enable();
+   * controller.enable( false ); // disable
+   * controller.enable( controller._disabled ); // toggle
+   */
+
+
+  enable(enabled = true) {
+    return this.disable(!enabled);
+  }
+  /**
+   * Disables this controller.
+   * @param {boolean} disabled
+   * @returns {this}
+   * @example
+   * controller.disable();
+   * controller.disable( false ); // enable
+   * controller.disable( !controller._disabled ); // toggle
+   */
+
+
+  disable(disabled = true) {
+    if (disabled === this._disabled) return this;
+    this._disabled = disabled;
+    this.domElement.classList.toggle('disabled', disabled);
+    this.$disable.toggleAttribute('disabled', disabled);
+    return this;
+  }
+  /**
+   * Destroys this controller and replaces it with a new option controller. Provided as a more
+   * descriptive syntax for `gui.add`, but primarily for compatibility with dat.gui.
+   *
+   * Use caution, as this method will destroy old references to this controller. It will also
+   * change controller order if called out of sequence, moving the option controller to the end of
+   * the GUI.
+   * @example
+   * // safe usage
+   *
+   * gui.add( object1, 'property' ).options( [ 'a', 'b', 'c' ] );
+   * gui.add( object2, 'property' );
+   *
+   * // danger
+   *
+   * const c = gui.add( object1, 'property' );
+   * gui.add( object2, 'property' );
+   *
+   * c.options( [ 'a', 'b', 'c' ] );
+   * // controller is now at the end of the GUI even though it was added first
+   *
+   * assert( c.parent.children.indexOf( c ) === -1 )
+   * // c references a controller that no longer exists
+   *
+   * @param {object|Array} options
+   * @returns {Controller}
+   */
+
+
+  options(options) {
+    const controller = this.parent.add(this.object, this.property, options);
+    controller.name(this._name);
+    this.destroy();
+    return controller;
+  }
+  /**
+   * Sets the minimum value. Only works on number controllers.
+   * @param {number} min
+   * @returns {this}
+   */
+
+
+  min(min) {
+    return this;
+  }
+  /**
+   * Sets the maximum value. Only works on number controllers.
+   * @param {number} max
+   * @returns {this}
+   */
+
+
+  max(max) {
+    return this;
+  }
+  /**
+   * Sets the step. Only works on number controllers.
+   * @param {number} step
+   * @returns {this}
+   */
+
+
+  step(step) {
+    return this;
+  }
+  /**
+   * Calls `updateDisplay()` every animation frame. Pass `false` to stop listening.
+   * @param {boolean} listen
+   * @returns {this}
+   */
+
+
+  listen(listen = true) {
+    /**
+     * Used to determine if the controller is currently listening. Don't modify this value
+     * directly. Use the `controller.listen( true|false )` method instead.
+     * @type {boolean}
+     */
+    this._listening = listen;
+
+    if (this._listenCallbackID !== undefined) {
+      cancelAnimationFrame(this._listenCallbackID);
+      this._listenCallbackID = undefined;
+    }
+
+    if (this._listening) {
+      this._listenCallback();
+    }
+
+    return this;
+  }
+
+  _listenCallback() {
+    this._listenCallbackID = requestAnimationFrame(this._listenCallback); // To prevent framerate loss, make sure the value has changed before updating the display.
+    // Note: save() is used here instead of getValue() only because of ColorController. The !== operator
+    // won't work for color objects or arrays, but ColorController.save() always returns a string.
+
+    const curValue = this.save();
+
+    if (curValue !== this._listenPrevValue) {
+      this.updateDisplay();
+    }
+
+    this._listenPrevValue = curValue;
+  }
+  /**
+   * Returns `object[ property ]`.
+   * @returns {any}
+   */
+
+
+  getValue() {
+    return this.object[this.property];
+  }
+  /**
+   * Sets the value of `object[ property ]`, invokes any `onChange` handlers and updates the display.
+   * @param {any} value
+   * @returns {this}
+   */
+
+
+  setValue(value) {
+    this.object[this.property] = value;
+
+    this._callOnChange();
+
+    this.updateDisplay();
+    return this;
+  }
+  /**
+   * Updates the display to keep it in sync with the current value. Useful for updating your
+   * controllers when their values have been modified outside of the GUI.
+   * @returns {this}
+   */
+
+
+  updateDisplay() {
+    return this;
+  }
+
+  load(value) {
+    this.setValue(value);
+
+    this._callOnFinishChange();
+
+    return this;
+  }
+
+  save() {
+    return this.getValue();
+  }
+  /**
+   * Destroys this controller and removes it from the parent GUI.
+   */
+
+
+  destroy() {
+    this.listen(false);
+    this.parent.children.splice(this.parent.children.indexOf(this), 1);
+    this.parent.controllers.splice(this.parent.controllers.indexOf(this), 1);
+    this.parent.$children.removeChild(this.domElement);
+  }
+
+}
+
+exports.Controller = Controller;
+
+class BooleanController extends Controller {
+  constructor(parent, object, property) {
+    super(parent, object, property, 'boolean', 'label');
+    this.$input = document.createElement('input');
+    this.$input.setAttribute('type', 'checkbox');
+    this.$input.setAttribute('aria-labelledby', this.$name.id);
+    this.$widget.appendChild(this.$input);
+    this.$input.addEventListener('change', () => {
+      this.setValue(this.$input.checked);
+
+      this._callOnFinishChange();
+    });
+    this.$disable = this.$input;
+    this.updateDisplay();
+  }
+
+  updateDisplay() {
+    this.$input.checked = this.getValue();
+    return this;
+  }
+
+}
+
+exports.BooleanController = BooleanController;
+
+function normalizeColorString(string) {
+  let match, result;
+
+  if (match = string.match(/(#|0x)?([a-f0-9]{6})/i)) {
+    result = match[2];
+  } else if (match = string.match(/rgb\(\s*(\d*)\s*,\s*(\d*)\s*,\s*(\d*)\s*\)/)) {
+    result = parseInt(match[1]).toString(16).padStart(2, 0) + parseInt(match[2]).toString(16).padStart(2, 0) + parseInt(match[3]).toString(16).padStart(2, 0);
+  } else if (match = string.match(/^#?([a-f0-9])([a-f0-9])([a-f0-9])$/i)) {
+    result = match[1] + match[1] + match[2] + match[2] + match[3] + match[3];
+  }
+
+  if (result) {
+    return '#' + result;
+  }
+
+  return false;
+}
+
+const STRING = {
+  isPrimitive: true,
+  match: v => typeof v === 'string',
+  fromHexString: normalizeColorString,
+  toHexString: normalizeColorString
+};
+const INT = {
+  isPrimitive: true,
+  match: v => typeof v === 'number',
+  fromHexString: string => parseInt(string.substring(1), 16),
+  toHexString: value => '#' + value.toString(16).padStart(6, 0)
+};
+const ARRAY = {
+  isPrimitive: false,
+  match: Array.isArray,
+
+  fromHexString(string, target, rgbScale = 1) {
+    const int = INT.fromHexString(string);
+    target[0] = (int >> 16 & 255) / 255 * rgbScale;
+    target[1] = (int >> 8 & 255) / 255 * rgbScale;
+    target[2] = (int & 255) / 255 * rgbScale;
+  },
+
+  toHexString([r, g, b], rgbScale = 1) {
+    rgbScale = 255 / rgbScale;
+    const int = r * rgbScale << 16 ^ g * rgbScale << 8 ^ b * rgbScale << 0;
+    return INT.toHexString(int);
+  }
+
+};
+const OBJECT = {
+  isPrimitive: false,
+  match: v => Object(v) === v,
+
+  fromHexString(string, target, rgbScale = 1) {
+    const int = INT.fromHexString(string);
+    target.r = (int >> 16 & 255) / 255 * rgbScale;
+    target.g = (int >> 8 & 255) / 255 * rgbScale;
+    target.b = (int & 255) / 255 * rgbScale;
+  },
+
+  toHexString({
+    r,
+    g,
+    b
+  }, rgbScale = 1) {
+    rgbScale = 255 / rgbScale;
+    const int = r * rgbScale << 16 ^ g * rgbScale << 8 ^ b * rgbScale << 0;
+    return INT.toHexString(int);
+  }
+
+};
+const FORMATS = [STRING, INT, ARRAY, OBJECT];
+
+function getColorFormat(value) {
+  return FORMATS.find(format => format.match(value));
+}
+
+class ColorController extends Controller {
+  constructor(parent, object, property, rgbScale) {
+    super(parent, object, property, 'color');
+    this.$input = document.createElement('input');
+    this.$input.setAttribute('type', 'color');
+    this.$input.setAttribute('tabindex', -1);
+    this.$input.setAttribute('aria-labelledby', this.$name.id);
+    this.$text = document.createElement('input');
+    this.$text.setAttribute('type', 'text');
+    this.$text.setAttribute('spellcheck', 'false');
+    this.$text.setAttribute('aria-labelledby', this.$name.id);
+    this.$display = document.createElement('div');
+    this.$display.classList.add('display');
+    this.$display.appendChild(this.$input);
+    this.$widget.appendChild(this.$display);
+    this.$widget.appendChild(this.$text);
+    this._format = getColorFormat(this.initialValue);
+    this._rgbScale = rgbScale;
+    this._initialValueHexString = this.save();
+    this._textFocused = false;
+    this.$input.addEventListener('input', () => {
+      this._setValueFromHexString(this.$input.value);
+    });
+    this.$input.addEventListener('blur', () => {
+      this._callOnFinishChange();
+    });
+    this.$text.addEventListener('input', () => {
+      const tryParse = normalizeColorString(this.$text.value);
+
+      if (tryParse) {
+        this._setValueFromHexString(tryParse);
+      }
+    });
+    this.$text.addEventListener('focus', () => {
+      this._textFocused = true;
+      this.$text.select();
+    });
+    this.$text.addEventListener('blur', () => {
+      this._textFocused = false;
+      this.updateDisplay();
+
+      this._callOnFinishChange();
+    });
+    this.$disable = this.$text;
+    this.updateDisplay();
+  }
+
+  reset() {
+    this._setValueFromHexString(this._initialValueHexString);
+
+    return this;
+  }
+
+  _setValueFromHexString(value) {
+    if (this._format.isPrimitive) {
+      const newValue = this._format.fromHexString(value);
+
+      this.setValue(newValue);
+    } else {
+      this._format.fromHexString(value, this.getValue(), this._rgbScale);
+
+      this._callOnChange();
+
+      this.updateDisplay();
+    }
+  }
+
+  save() {
+    return this._format.toHexString(this.getValue(), this._rgbScale);
+  }
+
+  load(value) {
+    this._setValueFromHexString(value);
+
+    this._callOnFinishChange();
+
+    return this;
+  }
+
+  updateDisplay() {
+    this.$input.value = this._format.toHexString(this.getValue(), this._rgbScale);
+
+    if (!this._textFocused) {
+      this.$text.value = this.$input.value.substring(1);
+    }
+
+    this.$display.style.backgroundColor = this.$input.value;
+    return this;
+  }
+
+}
+
+exports.ColorController = ColorController;
+
+class FunctionController extends Controller {
+  constructor(parent, object, property) {
+    super(parent, object, property, 'function'); // Buttons are the only case where widget contains name
+
+    this.$button = document.createElement('button');
+    this.$button.appendChild(this.$name);
+    this.$widget.appendChild(this.$button);
+    this.$button.addEventListener('click', e => {
+      e.preventDefault();
+      this.getValue().call(this.object);
+    }); // enables :active pseudo class on mobile
+
+    this.$button.addEventListener('touchstart', () => {}, {
+      passive: true
+    });
+    this.$disable = this.$button;
+  }
+
+}
+
+exports.FunctionController = FunctionController;
+
+class NumberController extends Controller {
+  constructor(parent, object, property, min, max, step) {
+    super(parent, object, property, 'number');
+
+    this._initInput();
+
+    this.min(min);
+    this.max(max);
+    const stepExplicit = step !== undefined;
+    this.step(stepExplicit ? step : this._getImplicitStep(), stepExplicit);
+    this.updateDisplay();
+  }
+
+  min(min) {
+    this._min = min;
+
+    this._onUpdateMinMax();
+
+    return this;
+  }
+
+  max(max) {
+    this._max = max;
+
+    this._onUpdateMinMax();
+
+    return this;
+  }
+
+  step(step, explicit = true) {
+    this._step = step;
+    this._stepExplicit = explicit;
+    return this;
+  }
+
+  updateDisplay() {
+    const value = this.getValue();
+
+    if (this._hasSlider) {
+      let percent = (value - this._min) / (this._max - this._min);
+      percent = Math.max(0, Math.min(percent, 1));
+      this.$fill.style.width = percent * 100 + '%';
+    }
+
+    if (!this._inputFocused) {
+      this.$input.value = value;
+    }
+
+    return this;
+  }
+
+  _initInput() {
+    this.$input = document.createElement('input');
+    this.$input.setAttribute('type', 'number');
+    this.$input.setAttribute('step', 'any');
+    this.$input.setAttribute('aria-labelledby', this.$name.id);
+    this.$widget.appendChild(this.$input);
+    this.$disable = this.$input;
+
+    const onInput = () => {
+      const value = parseFloat(this.$input.value);
+      if (isNaN(value)) return;
+      this.setValue(this._clamp(value));
+    }; // Keys & mouse wheel
+    // ---------------------------------------------------------------------
+
+
+    const increment = delta => {
+      const value = parseFloat(this.$input.value);
+      if (isNaN(value)) return;
+
+      this._snapClampSetValue(value + delta); // Force the input to updateDisplay when it's focused
+
+
+      this.$input.value = this.getValue();
+    };
+
+    const onKeyDown = e => {
+      if (e.code === 'Enter') {
+        this.$input.blur();
+      }
+
+      if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        increment(this._step * this._arrowKeyMultiplier(e));
+      }
+
+      if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        increment(this._step * this._arrowKeyMultiplier(e) * -1);
+      }
+    };
+
+    const onWheel = e => {
+      if (this._inputFocused) {
+        e.preventDefault();
+        increment(this._step * this._normalizeMouseWheel(e));
+      }
+    }; // Vertical drag
+    // ---------------------------------------------------------------------
+
+
+    let testingForVerticalDrag = false,
+        initClientX,
+        initClientY,
+        prevClientY,
+        initValue,
+        dragDelta; // Once the mouse is dragged more than DRAG_THRESH px on any axis, we decide
+    // on the user's intent: horizontal means highlight, vertical means drag.
+
+    const DRAG_THRESH = 5;
+
+    const onMouseDown = e => {
+      initClientX = e.clientX;
+      initClientY = prevClientY = e.clientY;
+      testingForVerticalDrag = true;
+      initValue = this.getValue();
+      dragDelta = 0;
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = e => {
+      if (testingForVerticalDrag) {
+        const dx = e.clientX - initClientX;
+        const dy = e.clientY - initClientY;
+
+        if (Math.abs(dy) > DRAG_THRESH) {
+          e.preventDefault();
+          this.$input.blur();
+          testingForVerticalDrag = false;
+
+          this._setDraggingStyle(true, 'vertical');
+        } else if (Math.abs(dx) > DRAG_THRESH) {
+          onMouseUp();
+        }
+      } // This isn't an else so that the first move counts towards dragDelta
+
+
+      if (!testingForVerticalDrag) {
+        const dy = e.clientY - prevClientY;
+        dragDelta -= dy * this._step * this._arrowKeyMultiplier(e); // Clamp dragDelta so we don't have 'dead space' after dragging past bounds.
+        // We're okay with the fact that bounds can be undefined here.
+
+        if (initValue + dragDelta > this._max) {
+          dragDelta = this._max - initValue;
+        } else if (initValue + dragDelta < this._min) {
+          dragDelta = this._min - initValue;
+        }
+
+        this._snapClampSetValue(initValue + dragDelta);
+      }
+
+      prevClientY = e.clientY;
+    };
+
+    const onMouseUp = () => {
+      this._setDraggingStyle(false, 'vertical');
+
+      this._callOnFinishChange();
+
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    }; // Focus state & onFinishChange
+    // ---------------------------------------------------------------------
+
+
+    const onFocus = () => {
+      this._inputFocused = true;
+    };
+
+    const onBlur = () => {
+      this._inputFocused = false;
+      this.updateDisplay();
+
+      this._callOnFinishChange();
+    };
+
+    this.$input.addEventListener('input', onInput);
+    this.$input.addEventListener('keydown', onKeyDown);
+    this.$input.addEventListener('wheel', onWheel, {
+      passive: false
+    });
+    this.$input.addEventListener('mousedown', onMouseDown);
+    this.$input.addEventListener('focus', onFocus);
+    this.$input.addEventListener('blur', onBlur);
+  }
+
+  _initSlider() {
+    this._hasSlider = true; // Build DOM
+    // ---------------------------------------------------------------------
+
+    this.$slider = document.createElement('div');
+    this.$slider.classList.add('slider');
+    this.$fill = document.createElement('div');
+    this.$fill.classList.add('fill');
+    this.$slider.appendChild(this.$fill);
+    this.$widget.insertBefore(this.$slider, this.$input);
+    this.domElement.classList.add('hasSlider'); // Map clientX to value
+    // ---------------------------------------------------------------------
+
+    const map = (v, a, b, c, d) => {
+      return (v - a) / (b - a) * (d - c) + c;
+    };
+
+    const setValueFromX = clientX => {
+      const rect = this.$slider.getBoundingClientRect();
+      let value = map(clientX, rect.left, rect.right, this._min, this._max);
+
+      this._snapClampSetValue(value);
+    }; // Mouse drag
+    // ---------------------------------------------------------------------
+
+
+    const mouseDown = e => {
+      this._setDraggingStyle(true);
+
+      setValueFromX(e.clientX);
+      window.addEventListener('mousemove', mouseMove);
+      window.addEventListener('mouseup', mouseUp);
+    };
+
+    const mouseMove = e => {
+      setValueFromX(e.clientX);
+    };
+
+    const mouseUp = () => {
+      this._callOnFinishChange();
+
+      this._setDraggingStyle(false);
+
+      window.removeEventListener('mousemove', mouseMove);
+      window.removeEventListener('mouseup', mouseUp);
+    }; // Touch drag
+    // ---------------------------------------------------------------------
+
+
+    let testingForScroll = false,
+        prevClientX,
+        prevClientY;
+
+    const beginTouchDrag = e => {
+      e.preventDefault();
+
+      this._setDraggingStyle(true);
+
+      setValueFromX(e.touches[0].clientX);
+      testingForScroll = false;
+    };
+
+    const onTouchStart = e => {
+      if (e.touches.length > 1) return; // If we're in a scrollable container, we should wait for the first
+      // touchmove to see if the user is trying to slide or scroll.
+
+      if (this._hasScrollBar) {
+        prevClientX = e.touches[0].clientX;
+        prevClientY = e.touches[0].clientY;
+        testingForScroll = true;
+      } else {
+        // Otherwise, we can set the value straight away on touchstart.
+        beginTouchDrag(e);
+      }
+
+      window.addEventListener('touchmove', onTouchMove);
+      window.addEventListener('touchend', onTouchEnd);
+    };
+
+    const onTouchMove = e => {
+      if (testingForScroll) {
+        const dx = e.touches[0].clientX - prevClientX;
+        const dy = e.touches[0].clientY - prevClientY;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+          // We moved horizontally, set the value and stop checking.
+          beginTouchDrag(e);
+        } else {
+          // This was, in fact, an attempt to scroll. Abort.
+          window.removeEventListener('touchmove', onTouchMove);
+          window.removeEventListener('touchend', onTouchEnd);
+        }
+      } else {
+        e.preventDefault();
+        setValueFromX(e.touches[0].clientX);
+      }
+    };
+
+    const onTouchEnd = () => {
+      this._callOnFinishChange();
+
+      this._setDraggingStyle(false);
+
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    }; // Mouse wheel
+    // ---------------------------------------------------------------------
+    // We have to use a debounced function to call onFinishChange because
+    // there's no way to tell when the user is "done" mouse-wheeling.
+
+
+    const callOnFinishChange = this._callOnFinishChange.bind(this);
+
+    const WHEEL_DEBOUNCE_TIME = 400;
+    let wheelFinishChangeTimeout;
+
+    const onWheel = e => {
+      // ignore vertical wheels if there's a scrollbar
+      const isVertical = Math.abs(e.deltaX) < Math.abs(e.deltaY);
+      if (isVertical && this._hasScrollBar) return;
+      e.preventDefault(); // set value
+
+      const delta = this._normalizeMouseWheel(e) * this._step;
+
+      this._snapClampSetValue(this.getValue() + delta); // force the input to updateDisplay when it's focused
+
+
+      this.$input.value = this.getValue(); // debounce onFinishChange
+
+      clearTimeout(wheelFinishChangeTimeout);
+      wheelFinishChangeTimeout = setTimeout(callOnFinishChange, WHEEL_DEBOUNCE_TIME);
+    };
+
+    this.$slider.addEventListener('mousedown', mouseDown);
+    this.$slider.addEventListener('touchstart', onTouchStart, {
+      passive: false
+    });
+    this.$slider.addEventListener('wheel', onWheel, {
+      passive: false
+    });
+  }
+
+  _setDraggingStyle(active, axis = 'horizontal') {
+    if (this.$slider) {
+      this.$slider.classList.toggle('active', active);
+    }
+
+    document.body.classList.toggle('lil-gui-dragging', active);
+    document.body.classList.toggle(`lil-gui-${axis}`, active);
+  }
+
+  _getImplicitStep() {
+    if (this._hasMin && this._hasMax) {
+      return (this._max - this._min) / 1000;
+    }
+
+    return 0.1;
+  }
+
+  _onUpdateMinMax() {
+    if (!this._hasSlider && this._hasMin && this._hasMax) {
+      // If this is the first time we're hearing about min and max
+      // and we haven't explicitly stated what our step is, let's
+      // update that too.
+      if (!this._stepExplicit) {
+        this.step(this._getImplicitStep(), false);
+      }
+
+      this._initSlider();
+
+      this.updateDisplay();
+    }
+  }
+
+  _normalizeMouseWheel(e) {
+    let {
+      deltaX,
+      deltaY
+    } = e; // Safari and Chrome report weird non-integral values for a notched wheel,
+    // but still expose actual lines scrolled via wheelDelta. Notched wheels
+    // should behave the same way as arrow keys.
+
+    if (Math.floor(e.deltaY) !== e.deltaY && e.wheelDelta) {
+      deltaX = 0;
+      deltaY = -e.wheelDelta / 120;
+      deltaY *= this._stepExplicit ? 1 : 10;
+    }
+
+    const wheel = deltaX + -deltaY;
+    return wheel;
+  }
+
+  _arrowKeyMultiplier(e) {
+    let mult = this._stepExplicit ? 1 : 10;
+
+    if (e.shiftKey) {
+      mult *= 10;
+    } else if (e.altKey) {
+      mult /= 10;
+    }
+
+    return mult;
+  }
+
+  _snap(value) {
+    // This would be the logical way to do things, but floating point errors.
+    // return Math.round( value / this._step ) * this._step;
+    // Using inverse step solves a lot of them, but not all
+    // const inverseStep = 1 / this._step;
+    // return Math.round( value * inverseStep ) / inverseStep;
+    // Not happy about this, but haven't seen it break.
+    const r = Math.round(value / this._step) * this._step;
+
+    return parseFloat(r.toPrecision(15));
+  }
+
+  _clamp(value) {
+    // either condition is false if min or max is undefined
+    if (value < this._min) value = this._min;
+    if (value > this._max) value = this._max;
+    return value;
+  }
+
+  _snapClampSetValue(value) {
+    this.setValue(this._clamp(this._snap(value)));
+  }
+
+  get _hasScrollBar() {
+    const root = this.parent.root.$children;
+    return root.scrollHeight > root.clientHeight;
+  }
+
+  get _hasMin() {
+    return this._min !== undefined;
+  }
+
+  get _hasMax() {
+    return this._max !== undefined;
+  }
+
+}
+
+exports.NumberController = NumberController;
+
+class OptionController extends Controller {
+  constructor(parent, object, property, options) {
+    super(parent, object, property, 'option');
+    this.$select = document.createElement('select');
+    this.$select.setAttribute('aria-labelledby', this.$name.id);
+    this.$display = document.createElement('div');
+    this.$display.classList.add('display');
+    this._values = Array.isArray(options) ? options : Object.values(options);
+    this._names = Array.isArray(options) ? options : Object.keys(options);
+
+    this._names.forEach(name => {
+      const $option = document.createElement('option');
+      $option.innerHTML = name;
+      this.$select.appendChild($option);
+    });
+
+    this.$select.addEventListener('change', () => {
+      this.setValue(this._values[this.$select.selectedIndex]);
+
+      this._callOnFinishChange();
+    });
+    this.$select.addEventListener('focus', () => {
+      this.$display.classList.add('focus');
+    });
+    this.$select.addEventListener('blur', () => {
+      this.$display.classList.remove('focus');
+    });
+    this.$widget.appendChild(this.$select);
+    this.$widget.appendChild(this.$display);
+    this.$disable = this.$select;
+    this.updateDisplay();
+  }
+
+  updateDisplay() {
+    const value = this.getValue();
+
+    const index = this._values.indexOf(value);
+
+    this.$select.selectedIndex = index;
+    this.$display.innerHTML = index === -1 ? value : this._names[index];
+    return this;
+  }
+
+}
+
+exports.OptionController = OptionController;
+
+class StringController extends Controller {
+  constructor(parent, object, property) {
+    super(parent, object, property, 'string');
+    this.$input = document.createElement('input');
+    this.$input.setAttribute('type', 'text');
+    this.$input.setAttribute('aria-labelledby', this.$name.id);
+    this.$input.addEventListener('input', () => {
+      this.setValue(this.$input.value);
+    });
+    this.$input.addEventListener('keydown', e => {
+      if (e.code === 'Enter') {
+        this.$input.blur();
+      }
+    });
+    this.$input.addEventListener('blur', () => {
+      this._callOnFinishChange();
+    });
+    this.$widget.appendChild(this.$input);
+    this.$disable = this.$input;
+    this.updateDisplay();
+  }
+
+  updateDisplay() {
+    this.$input.value = this.getValue();
+    return this;
+  }
+
+}
+
+exports.StringController = StringController;
+const stylesheet = `.lil-gui {
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: 1;
+  font-weight: normal;
+  font-style: normal;
+  text-align: left;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  --background-color: #1f1f1f;
+  --text-color: #ebebeb;
+  --title-background-color: #111111;
+  --title-text-color: #ebebeb;
+  --widget-color: #424242;
+  --hover-color: #4f4f4f;
+  --focus-color: #595959;
+  --number-color: #2cc9ff;
+  --string-color: #a2db3c;
+  --font-size: 11px;
+  --input-font-size: 11px;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-family-mono: Menlo, Monaco, Consolas, "Droid Sans Mono", monospace;
+  --padding: 4px;
+  --spacing: 4px;
+  --widget-height: 20px;
+  --name-width: 45%;
+  --slider-knob-width: 2px;
+  --slider-input-width: 27%;
+  --color-input-width: 27%;
+  --slider-input-min-width: 45px;
+  --color-input-min-width: 45px;
+  --folder-indent: 7px;
+  --widget-padding: 0 0 0 3px;
+  --widget-border-radius: 2px;
+  --checkbox-size: calc(0.75 * var(--widget-height));
+  --scrollbar-width: 5px;
+}
+.lil-gui, .lil-gui * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.lil-gui.root {
+  width: var(--width, 245px);
+  display: flex;
+  flex-direction: column;
+}
+.lil-gui.root > .title {
+  background: var(--title-background-color);
+  color: var(--title-text-color);
+}
+.lil-gui.root > .children {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.lil-gui.root > .children::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
+  background: var(--background-color);
+}
+.lil-gui.root > .children::-webkit-scrollbar-thumb {
+  border-radius: var(--scrollbar-width);
+  background: var(--focus-color);
+}
+@media (pointer: coarse) {
+  .lil-gui.allow-touch-styles {
+    --widget-height: 28px;
+    --padding: 6px;
+    --spacing: 6px;
+    --font-size: 13px;
+    --input-font-size: 16px;
+    --folder-indent: 10px;
+    --scrollbar-width: 7px;
+    --slider-input-min-width: 50px;
+    --color-input-min-width: 65px;
+  }
+}
+.lil-gui.force-touch-styles {
+  --widget-height: 28px;
+  --padding: 6px;
+  --spacing: 6px;
+  --font-size: 13px;
+  --input-font-size: 16px;
+  --folder-indent: 10px;
+  --scrollbar-width: 7px;
+  --slider-input-min-width: 50px;
+  --color-input-min-width: 65px;
+}
+.lil-gui.autoPlace {
+  max-height: 100%;
+  position: fixed;
+  top: 0;
+  right: 15px;
+  z-index: 1001;
+}
+
+.lil-gui .controller {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--padding);
+  margin: var(--spacing) 0;
+}
+.lil-gui .controller.disabled {
+  opacity: 0.5;
+}
+.lil-gui .controller.disabled, .lil-gui .controller.disabled * {
+  pointer-events: none !important;
+}
+.lil-gui .controller > .name {
+  min-width: var(--name-width);
+  flex-shrink: 0;
+  white-space: pre;
+  padding-right: var(--spacing);
+  line-height: var(--widget-height);
+}
+.lil-gui .controller .widget {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--widget-height);
+}
+.lil-gui .controller.string input {
+  color: var(--string-color);
+}
+.lil-gui .controller.boolean .widget {
+  cursor: pointer;
+}
+.lil-gui .controller.color .display {
+  width: 100%;
+  height: var(--widget-height);
+  border-radius: var(--widget-border-radius);
+  position: relative;
+}
+@media (hover: hover) {
+  .lil-gui .controller.color .display:hover:before {
+    content: " ";
+    display: block;
+    position: absolute;
+    border-radius: var(--widget-border-radius);
+    border: 1px solid #fff9;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+}
+.lil-gui .controller.color input[type=color] {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.lil-gui .controller.color input[type=text] {
+  margin-left: var(--spacing);
+  font-family: var(--font-family-mono);
+  min-width: var(--color-input-min-width);
+  width: var(--color-input-width);
+  flex-shrink: 0;
+}
+.lil-gui .controller.option select {
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  max-width: 100%;
+}
+.lil-gui .controller.option .display {
+  position: relative;
+  pointer-events: none;
+  border-radius: var(--widget-border-radius);
+  height: var(--widget-height);
+  line-height: var(--widget-height);
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-all;
+  padding-left: 0.55em;
+  padding-right: 1.75em;
+  background: var(--widget-color);
+}
+@media (hover: hover) {
+  .lil-gui .controller.option .display.focus {
+    background: var(--focus-color);
+  }
+}
+.lil-gui .controller.option .display.active {
+  background: var(--focus-color);
+}
+.lil-gui .controller.option .display:after {
+  font-family: "lil-gui";
+  content: "↕";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  padding-right: 0.375em;
+}
+.lil-gui .controller.option .widget,
+.lil-gui .controller.option select {
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .lil-gui .controller.option .widget:hover .display {
+    background: var(--hover-color);
+  }
+}
+.lil-gui .controller.number input {
+  color: var(--number-color);
+}
+.lil-gui .controller.number.hasSlider input {
+  margin-left: var(--spacing);
+  width: var(--slider-input-width);
+  min-width: var(--slider-input-min-width);
+  flex-shrink: 0;
+}
+.lil-gui .controller.number .slider {
+  width: 100%;
+  height: var(--widget-height);
+  background-color: var(--widget-color);
+  border-radius: var(--widget-border-radius);
+  padding-right: var(--slider-knob-width);
+  overflow: hidden;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+@media (hover: hover) {
+  .lil-gui .controller.number .slider:hover {
+    background-color: var(--hover-color);
+  }
+}
+.lil-gui .controller.number .slider.active {
+  background-color: var(--focus-color);
+}
+.lil-gui .controller.number .slider.active .fill {
+  opacity: 0.95;
+}
+.lil-gui .controller.number .fill {
+  height: 100%;
+  border-right: var(--slider-knob-width) solid var(--number-color);
+  box-sizing: content-box;
+}
+
+.lil-gui-dragging .lil-gui {
+  --hover-color: var(--widget-color);
+}
+.lil-gui-dragging * {
+  cursor: ew-resize !important;
+}
+
+.lil-gui-dragging.lil-gui-vertical * {
+  cursor: ns-resize !important;
+}
+
+.lil-gui .title {
+  --title-height: calc(var(--widget-height) + var(--spacing) * 1.25);
+  height: var(--title-height);
+  line-height: calc(var(--title-height) - 4px);
+  font-weight: 600;
+  padding: 0 var(--padding);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  outline: none;
+  text-decoration-skip: objects;
+}
+.lil-gui .title:before {
+  font-family: "lil-gui";
+  content: "▾";
+  padding-right: 2px;
+  display: inline-block;
+}
+.lil-gui .title:active {
+  background: var(--title-background-color);
+  opacity: 0.75;
+}
+@media (hover: hover) {
+  body:not(.lil-gui-dragging) .lil-gui .title:hover {
+    background: var(--title-background-color);
+    opacity: 0.85;
+  }
+  .lil-gui .title:focus {
+    text-decoration: underline var(--focus-color);
+  }
+}
+.lil-gui.root > .title:focus {
+  text-decoration: none !important;
+}
+.lil-gui.closed > .title:before {
+  content: "▸";
+}
+.lil-gui.closed > .children {
+  transform: translateY(-7px);
+  opacity: 0;
+}
+.lil-gui.closed:not(.transition) > .children {
+  display: none;
+}
+.lil-gui.transition > .children {
+  transition-duration: 300ms;
+  transition-property: height, opacity, transform;
+  transition-timing-function: cubic-bezier(0.2, 0.6, 0.35, 1);
+  overflow: hidden;
+  pointer-events: none;
+}
+.lil-gui .children:empty:before {
+  content: "Empty";
+  padding: 0 var(--padding);
+  margin: var(--spacing) 0;
+  display: block;
+  height: var(--widget-height);
+  font-style: italic;
+  line-height: var(--widget-height);
+  opacity: 0.5;
+}
+.lil-gui.root > .children > .lil-gui > .title {
+  border: 0 solid var(--widget-color);
+  border-width: 1px 0;
+  transition: border-color 300ms;
+}
+.lil-gui.root > .children > .lil-gui.closed > .title {
+  border-bottom-color: transparent;
+}
+.lil-gui + .controller {
+  border-top: 1px solid var(--widget-color);
+  margin-top: 0;
+  padding-top: var(--spacing);
+}
+.lil-gui .lil-gui .lil-gui > .title {
+  border: none;
+}
+.lil-gui .lil-gui .lil-gui > .children {
+  border: none;
+  margin-left: var(--folder-indent);
+  border-left: 2px solid var(--widget-color);
+}
+.lil-gui .lil-gui .controller {
+  border: none;
+}
+
+.lil-gui input {
+  -webkit-tap-highlight-color: transparent;
+  border: 0;
+  outline: none;
+  font-family: var(--font-family);
+  font-size: var(--input-font-size);
+  border-radius: var(--widget-border-radius);
+  height: var(--widget-height);
+  background: var(--widget-color);
+  color: var(--text-color);
+  width: 100%;
+}
+@media (hover: hover) {
+  .lil-gui input:hover {
+    background: var(--hover-color);
+  }
+  .lil-gui input:active {
+    background: var(--focus-color);
+  }
+}
+.lil-gui input:disabled {
+  opacity: 1;
+}
+.lil-gui input[type=text],
+.lil-gui input[type=number] {
+  padding: var(--widget-padding);
+}
+.lil-gui input[type=text]:focus,
+.lil-gui input[type=number]:focus {
+  background: var(--focus-color);
+}
+.lil-gui input::-webkit-outer-spin-button,
+.lil-gui input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.lil-gui input[type=number] {
+  -moz-appearance: textfield;
+}
+.lil-gui input[type=checkbox] {
+  appearance: none;
+  -webkit-appearance: none;
+  height: var(--checkbox-size);
+  width: var(--checkbox-size);
+  border-radius: var(--widget-border-radius);
+  text-align: center;
+  cursor: pointer;
+}
+.lil-gui input[type=checkbox]:checked:before {
+  font-family: "lil-gui";
+  content: "✓";
+  font-size: var(--checkbox-size);
+  line-height: var(--checkbox-size);
+}
+@media (hover: hover) {
+  .lil-gui input[type=checkbox]:focus {
+    box-shadow: inset 0 0 0 1px var(--focus-color);
+  }
+}
+.lil-gui button {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  color: var(--text-color);
+  width: 100%;
+  height: var(--widget-height);
+  text-transform: none;
+  background: var(--widget-color);
+  border-radius: var(--widget-border-radius);
+  border: 1px solid var(--widget-color);
+  text-align: center;
+  line-height: calc(var(--widget-height) - 4px);
+}
+@media (hover: hover) {
+  .lil-gui button:hover {
+    background: var(--hover-color);
+    border-color: var(--hover-color);
+  }
+  .lil-gui button:focus {
+    border-color: var(--focus-color);
+  }
+}
+.lil-gui button:active {
+  background: var(--focus-color);
+}
+
+@font-face {
+  font-family: "lil-gui";
+  src: url("data:application/font-woff;charset=utf-8;base64,d09GRgABAAAAAAUsAAsAAAAACJwAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABHU1VCAAABCAAAAH4AAADAImwmYE9TLzIAAAGIAAAAPwAAAGBKqH5SY21hcAAAAcgAAAD0AAACrukyyJBnbHlmAAACvAAAAF8AAACEIZpWH2hlYWQAAAMcAAAAJwAAADZfcj2zaGhlYQAAA0QAAAAYAAAAJAC5AHhobXR4AAADXAAAABAAAABMAZAAAGxvY2EAAANsAAAAFAAAACgCEgIybWF4cAAAA4AAAAAeAAAAIAEfABJuYW1lAAADoAAAASIAAAIK9SUU/XBvc3QAAATEAAAAZgAAAJCTcMc2eJxVjbEOgjAURU+hFRBK1dGRL+ALnAiToyMLEzFpnPz/eAshwSa97517c/MwwJmeB9kwPl+0cf5+uGPZXsqPu4nvZabcSZldZ6kfyWnomFY/eScKqZNWupKJO6kXN3K9uCVoL7iInPr1X5baXs3tjuMqCtzEuagm/AAlzQgPAAB4nGNgYRBlnMDAysDAYM/gBiT5oLQBAwuDJAMDEwMrMwNWEJDmmsJwgCFeXZghBcjlZMgFCzOiKOIFAB71Bb8AeJy1kjFuwkAQRZ+DwRAwBtNQRUGKQ8OdKCAWUhAgKLhIuAsVSpWz5Bbkj3dEgYiUIszqWdpZe+Z7/wB1oCYmIoboiwiLT2WjKl/jscrHfGg/pKdMkyklC5Zs2LEfHYpjcRoPzme9MWWmk3dWbK9ObkWkikOetJ554fWyoEsmdSlt+uR0pCJR34b6t/TVg1SY3sYvdf8vuiKrpyaDXDISiegp17p7579Gp3p++y7HPAiY9pmTibljrr85qSidtlg4+l25GLCaS8e6rRxNBmsnERunKbaOObRz7N72ju5vdAjYpBXHgJylOAVsMseDAPEP8LYoUHicY2BiAAEfhiAGJgZWBgZ7RnFRdnVJELCQlBSRlATJMoLV2DK4glSYs6ubq5vbKrJLSbGrgEmovDuDJVhe3VzcXFwNLCOILB/C4IuQ1xTn5FPilBTj5FPmBAB4WwoqAHicY2BkYGAA4sk1sR/j+W2+MnAzpDBgAyEMQUCSg4EJxAEAwUgFHgB4nGNgZGBgSGFggJMhDIwMqEAYAByHATJ4nGNgAIIUNEwmAABl3AGReJxjYAACIQYlBiMGJ3wQAEcQBEV4nGNgZGBgEGZgY2BiAAEQyQWEDAz/wXwGAAsPATIAAHicXdBNSsNAHAXwl35iA0UQXYnMShfS9GPZA7T7LgIu03SSpkwzYTIt1BN4Ak/gKTyAeCxfw39jZkjymzcvAwmAW/wgwHUEGDb36+jQQ3GXGot79L24jxCP4gHzF/EIr4jEIe7wxhOC3g2TMYy4Q7+Lu/SHuEd/ivt4wJd4wPxbPEKMX3GI5+DJFGaSn4qNzk8mcbKSR6xdXdhSzaOZJGtdapd4vVPbi6rP+cL7TGXOHtXKll4bY1Xl7EGnPtp7Xy2n00zyKLVHfkHBa4IcJ2oD3cgggWvt/V/FbDrUlEUJhTn/0azVWbNTNr0Ens8de1tceK9xZmfB1CPjOmPH4kitmvOubcNpmVTN3oFJyjzCvnmrwhJTzqzVj9jiSX911FjeAAB4nG3HMRKCMBBA0f0giiKi4DU8k0V2GWbIZDOh4PoWWvq6J5V8If9NVNQcaDhyouXMhY4rPTcG7jwYmXhKq8Wz+p762aNaeYXom2n3m2dLTVgsrCgFJ7OTmIkYbwIbC6vIB7WmFfAAAA==") format("woff");
+}`;
+
+function _injectStyles(cssContent) {
+  const injected = document.createElement('style');
+  injected.innerHTML = cssContent;
+  const before = document.querySelector('head link[rel=stylesheet], head style');
+
+  if (before) {
+    document.head.insertBefore(injected, before);
+  } else {
+    document.head.appendChild(injected);
+  }
+}
+
+let stylesInjected = false;
+
+class GUI {
+  /**
+   * Creates a panel that holds controllers.
+   * @example
+   * new GUI();
+   * new GUI( { container: document.getElementById( 'custom' ) } );
+   *
+   * @param {object} [options]
+   * @param {boolean} [options.autoPlace=true]
+   * Adds the GUI to `document.body` and fixes it to the top right of the page.
+   *
+   * @param {HTMLElement} [options.container]
+   * Adds the GUI to this DOM element. Overrides `autoPlace`.
+   *
+   * @param {number} [options.width=245]
+   * Width of the GUI in pixels, usually set when name labels become too long. Note that you can make
+   * name labels wider in CSS with `.lil‑gui { ‑‑name‑width: 55% }`
+   *
+   * @param {string} [options.title=Controls]
+   * Name to display in the title bar.
+   *
+   * @param {boolean} [options.injectStyles=true]
+   * Injects the default stylesheet into the page if this is the first GUI.
+   * Pass `false` to use your own stylesheet.
+   *
+   * @param {number} [options.touchStyles=true]
+   * Makes controllers larger on touch devices. Pass `false` to disable touch styles.
+   *
+   * @param {GUI} [options.parent]
+   * Adds this GUI as a child in another GUI. Usually this is done for you by `addFolder()`.
+   *
+   */
+  constructor({
+    parent,
+    autoPlace = parent === undefined,
+    container,
+    width,
+    title = 'Controls',
+    injectStyles = true,
+    touchStyles = true
+  } = {}) {
+    /**
+     * The GUI containing this folder, or `undefined` if this is the root GUI.
+     * @type {GUI}
+     */
+    this.parent = parent;
+    /**
+     * The top level GUI containing this folder, or `this` if this is the root GUI.
+     * @type {GUI}
+     */
+
+    this.root = parent ? parent.root : this;
+    /**
+     * The list of controllers and folders contained by this GUI.
+     * @type {Array<GUI|Controller>}
+     */
+
+    this.children = [];
+    /**
+     * The list of controllers contained by this GUI.
+     * @type {Array<Controller>}
+     */
+
+    this.controllers = [];
+    /**
+     * The list of folders contained by this GUI.
+     * @type {Array<GUI>}
+     */
+
+    this.folders = [];
+    /**
+     * Used to determine if the GUI is closed. Use `gui.open()` or `gui.close()` to change this.
+     * @type {boolean}
+     */
+
+    this._closed = false;
+    /**
+     * Used to determine if the GUI is hidden. Use `gui.show()` or `gui.hide()` to change this.
+     * @type {boolean}
+     */
+
+    this._hidden = false;
+    /**
+     * The outermost container element.
+     * @type {HTMLElement}
+     */
+
+    this.domElement = document.createElement('div');
+    this.domElement.classList.add('lil-gui');
+    /**
+     * The DOM element that contains the title.
+     * @type {HTMLElement}
+     */
+
+    this.$title = document.createElement('div');
+    this.$title.classList.add('title');
+    this.$title.setAttribute('role', 'button');
+    this.$title.setAttribute('aria-expanded', true);
+    this.$title.setAttribute('tabindex', 0);
+    this.$title.addEventListener('click', () => this.openAnimated(this._closed));
+    this.$title.addEventListener('keydown', e => {
+      if (e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        this.$title.click();
+      }
+    }); // enables :active pseudo class on mobile
+
+    this.$title.addEventListener('touchstart', () => {}, {
+      passive: true
+    });
+    /**
+     * The DOM element that contains children.
+     * @type {HTMLElement}
+     */
+
+    this.$children = document.createElement('div');
+    this.$children.classList.add('children');
+    this.domElement.appendChild(this.$title);
+    this.domElement.appendChild(this.$children);
+    this.title(title);
+
+    if (touchStyles) {
+      this.domElement.classList.add('allow-touch-styles');
+    }
+
+    if (this.parent) {
+      this.parent.children.push(this);
+      this.parent.folders.push(this);
+      this.parent.$children.appendChild(this.domElement); // Stop the constructor early, everything onward only applies to root GUI's
+
+      return;
+    }
+
+    this.domElement.classList.add('root'); // Inject stylesheet if we haven't done that yet
+
+    if (!stylesInjected && injectStyles) {
+      _injectStyles(stylesheet);
+
+      stylesInjected = true;
+    }
+
+    if (container) {
+      container.appendChild(this.domElement);
+    } else if (autoPlace) {
+      this.domElement.classList.add('autoPlace');
+      document.body.appendChild(this.domElement);
+    }
+
+    if (width) {
+      this.domElement.style.setProperty('--width', width + 'px');
+    } // Don't fire global key events while typing in the GUI:
+
+
+    this.domElement.addEventListener('keydown', e => e.stopPropagation());
+    this.domElement.addEventListener('keyup', e => e.stopPropagation());
+  }
+  /**
+   * Adds a controller to the GUI, inferring controller type using the `typeof` operator.
+   * @example
+   * gui.add( object, 'property' );
+   * gui.add( object, 'number', 0, 100, 1 );
+   * gui.add( object, 'options', [ 1, 2, 3 ] );
+   *
+   * @param {object} object The object the controller will modify.
+   * @param {string} property Name of the property to control.
+   * @param {number|object|Array} [$1] Minimum value for number controllers, or the set of
+   * selectable values for a dropdown.
+   * @param {number} [max] Maximum value for number controllers.
+   * @param {number} [step] Step value for number controllers.
+   * @returns {Controller}
+   */
+
+
+  add(object, property, $1, max, step) {
+    if (Object($1) === $1) {
+      return new OptionController(this, object, property, $1);
+    }
+
+    const initialValue = object[property];
+
+    switch (typeof initialValue) {
+      case 'number':
+        return new NumberController(this, object, property, $1, max, step);
+
+      case 'boolean':
+        return new BooleanController(this, object, property);
+
+      case 'string':
+        return new StringController(this, object, property);
+
+      case 'function':
+        return new FunctionController(this, object, property);
+    }
+
+    console.error(`gui.add failed
+	property:`, property, `
+	object:`, object, `
+	value:`, initialValue);
+  }
+  /**
+   * Adds a color controller to the GUI.
+   * @example
+   * params = {
+   * 	cssColor: '#ff00ff',
+   * 	rgbColor: { r: 0, g: 0.2, b: 0.4 },
+   * 	customRange: [ 0, 127, 255 ],
+   * };
+   *
+   * gui.addColor( params, 'cssColor' );
+   * gui.addColor( params, 'rgbColor' );
+   * gui.addColor( params, 'customRange', 255 );
+   *
+   * @param {object} object The object the controller will modify.
+   * @param {string} property Name of the property to control.
+   * @param {number} rgbScale Maximum value for a color channel when using an RGB color. You may
+   * need to set this to 255 if your colors are too dark.
+   * @returns {Controller}
+   */
+
+
+  addColor(object, property, rgbScale = 1) {
+    return new ColorController(this, object, property, rgbScale);
+  }
+  /**
+   * Adds a folder to the GUI, which is just another GUI. This method returns
+   * the nested GUI so you can add controllers to it.
+   * @example
+   * const folder = gui.addFolder( 'Position' );
+   * folder.add( position, 'x' );
+   * folder.add( position, 'y' );
+   * folder.add( position, 'z' );
+   *
+   * @param {string} title Name to display in the folder's title bar.
+   * @returns {GUI}
+   */
+
+
+  addFolder(title) {
+    return new GUI({
+      parent: this,
+      title
+    });
+  }
+  /**
+   * Recalls values that were saved with `gui.save()`.
+   * @param {object} obj
+   * @param {boolean} recursive Pass false to exclude folders descending from this GUI.
+   * @returns {this}
+   */
+
+
+  load(obj, recursive = true) {
+    if (obj.controllers) {
+      this.controllers.forEach(c => {
+        if (c instanceof FunctionController) return;
+
+        if (c._name in obj.controllers) {
+          c.load(obj.controllers[c._name]);
+        }
+      });
+    }
+
+    if (recursive && obj.folders) {
+      this.folders.forEach(f => {
+        if (f._title in obj.folders) {
+          f.load(obj.folders[f._title]);
+        }
+      });
+    }
+
+    return this;
+  }
+  /**
+   * Returns an object mapping controller names to values. The object can be passed to `gui.load()` to
+   * recall these values.
+   * @example
+   * {
+   * 	controllers: {
+   * 		prop1: 1,
+   * 		prop2: 'value',
+   * 		...
+   * 	},
+   * 	folders: {
+   * 		folderName1: { controllers, folders },
+   * 		folderName2: { controllers, folders }
+   * 		...
+   * 	}
+   * }
+   *
+   * @param {boolean} recursive Pass false to exclude folders descending from this GUI.
+   * @returns {object}
+   */
+
+
+  save(recursive = true) {
+    const obj = {
+      controllers: {},
+      folders: {}
+    };
+    this.controllers.forEach(c => {
+      if (c instanceof FunctionController) return;
+
+      if (c._name in obj.controllers) {
+        throw new Error(`Cannot save GUI with duplicate property "${c._name}"`);
+      }
+
+      obj.controllers[c._name] = c.save();
+    });
+
+    if (recursive) {
+      this.folders.forEach(f => {
+        if (f._title in obj.folders) {
+          throw new Error(`Cannot save GUI with duplicate folder "${f._title}"`);
+        }
+
+        obj.folders[f._title] = f.save();
+      });
+    }
+
+    return obj;
+  }
+  /**
+   * Opens a GUI or folder. GUI and folders are open by default.
+   * @param {boolean} open Pass false to close
+   * @returns {this}
+   * @example
+   * gui.open(); // open
+   * gui.open( false ); // close
+   * gui.open( gui._closed ); // toggle
+   */
+
+
+  open(open = true) {
+    this._closed = !open;
+    this.$title.setAttribute('aria-expanded', !this._closed);
+    this.domElement.classList.toggle('closed', this._closed);
+    return this;
+  }
+  /**
+   * Closes the GUI.
+   * @returns {this}
+   */
+
+
+  close() {
+    return this.open(false);
+  }
+  /**
+   * Shows the GUI after it's been hidden.
+   * @param {boolean} show
+   * @returns {this}
+   * @example
+   * gui.show();
+   * gui.show( false ); // hide
+   * gui.show( gui._hidden ); // toggle
+   */
+
+
+  show(show = true) {
+    this._hidden = !show;
+    this.domElement.style.display = this._hidden ? 'none' : '';
+    return this;
+  }
+  /**
+   * Hides the GUI.
+   * @returns {this}
+   */
+
+
+  hide() {
+    return this.show(false);
+  }
+
+  openAnimated(open = true) {
+    // set state immediately
+    this._closed = !open;
+    this.$title.setAttribute('aria-expanded', !this._closed); // wait for next frame to measure $children
+
+    requestAnimationFrame(() => {
+      // explicitly set initial height for transition
+      const initialHeight = this.$children.clientHeight;
+      this.$children.style.height = initialHeight + 'px';
+      this.domElement.classList.add('transition');
+
+      const onTransitionEnd = e => {
+        if (e.target !== this.$children) return;
+        this.$children.style.height = '';
+        this.domElement.classList.remove('transition');
+        this.$children.removeEventListener('transitionend', onTransitionEnd);
+      };
+
+      this.$children.addEventListener('transitionend', onTransitionEnd); // todo: this is wrong if children's scrollHeight makes for a gui taller than maxHeight
+
+      const targetHeight = !open ? 0 : this.$children.scrollHeight;
+      this.domElement.classList.toggle('closed', !open);
+      requestAnimationFrame(() => {
+        this.$children.style.height = targetHeight + 'px';
+      });
+    });
+    return this;
+  }
+  /**
+   * Change the title of this GUI.
+   * @param {string} title
+   * @returns {this}
+   */
+
+
+  title(title) {
+    /**
+     * Current title of the GUI. Use `gui.title( 'Title' )` to modify this value.
+     * @type {string}
+     */
+    this._title = title;
+    this.$title.innerHTML = title;
+    return this;
+  }
+  /**
+   * Resets all controllers to their initial values.
+   * @param {boolean} recursive Pass false to exclude folders descending from this GUI.
+   * @returns {this}
+   */
+
+
+  reset(recursive = true) {
+    const controllers = recursive ? this.controllersRecursive() : this.controllers;
+    controllers.forEach(c => c.reset());
+    return this;
+  }
+  /**
+   * Pass a function to be called whenever a controller in this GUI changes.
+   * @param {function({object:object, property:string, value:any, controller:Controller})} callback
+   * @returns {this}
+   * @example
+   * gui.onChange( event => {
+   * 	event.object     // object that was modified
+   * 	event.property   // string, name of property
+   * 	event.value      // new value of controller
+   * 	event.controller // controller that was modified
+   * } );
+   */
+
+
+  onChange(callback) {
+    /**
+     * Used to access the function bound to `onChange` events. Don't modify this value
+     * directly. Use the `gui.onChange( callback )` method instead.
+     * @type {Function}
+     */
+    this._onChange = callback;
+    return this;
+  }
+
+  _callOnChange(controller) {
+    if (this.parent) {
+      this.parent._callOnChange(controller);
+    }
+
+    if (this._onChange !== undefined) {
+      this._onChange.call(this, {
+        object: controller.object,
+        property: controller.property,
+        value: controller.getValue(),
+        controller
+      });
+    }
+  }
+  /**
+   * Pass a function to be called whenever a controller in this GUI has finished changing.
+   * @param {function({object:object, property:string, value:any, controller:Controller})} callback
+   * @returns {this}
+   * @example
+   * gui.onFinishChange( event => {
+   * 	event.object     // object that was modified
+   * 	event.property   // string, name of property
+   * 	event.value      // new value of controller
+   * 	event.controller // controller that was modified
+   * } );
+   */
+
+
+  onFinishChange(callback) {
+    /**
+     * Used to access the function bound to `onFinishChange` events. Don't modify this value
+     * directly. Use the `gui.onFinishChange( callback )` method instead.
+     * @type {Function}
+     */
+    this._onFinishChange = callback;
+    return this;
+  }
+
+  _callOnFinishChange(controller) {
+    if (this.parent) {
+      this.parent._callOnFinishChange(controller);
+    }
+
+    if (this._onFinishChange !== undefined) {
+      this._onFinishChange.call(this, {
+        object: controller.object,
+        property: controller.property,
+        value: controller.getValue(),
+        controller
+      });
+    }
+  }
+  /**
+   * Destroys all DOM elements and event listeners associated with this GUI
+   */
+
+
+  destroy() {
+    if (this.parent) {
+      this.parent.children.splice(this.parent.children.indexOf(this), 1);
+      this.parent.folders.splice(this.parent.folders.indexOf(this), 1);
+    }
+
+    if (this.domElement.parentElement) {
+      this.domElement.parentElement.removeChild(this.domElement);
+    }
+
+    Array.from(this.children).forEach(c => c.destroy());
+  }
+  /**
+   * Returns an array of controllers contained by this GUI and its descendents.
+   * @returns {Controller[]}
+   */
+
+
+  controllersRecursive() {
+    let controllers = Array.from(this.controllers);
+    this.folders.forEach(f => {
+      controllers = controllers.concat(f.controllersRecursive());
+    });
+    return controllers;
+  }
+  /**
+   * Returns an array of folders contained by this GUI and its descendents.
+   * @returns {GUI[]}
+   */
+
+
+  foldersRecursive() {
+    let folders = Array.from(this.folders);
+    this.folders.forEach(f => {
+      folders = folders.concat(f.foldersRecursive());
+    });
+    return folders;
+  }
+
+}
+
+exports.GUI = GUI;
+var _default = GUI;
+exports.default = _default;
+},{}],"../node_modules/three/examples/jsm/controls/OrbitControls.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.OrbitControls = exports.MapControls = void 0;
+
+var _three = require("three");
+
+// This set of controls performs orbiting, dollying (zooming), and panning.
+// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
+//
+//    Orbit - left mouse / touch: one-finger move
+//    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
+//    Pan - right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move
+const _changeEvent = {
+  type: 'change'
+};
+const _startEvent = {
+  type: 'start'
+};
+const _endEvent = {
+  type: 'end'
+};
+
+class OrbitControls extends _three.EventDispatcher {
+  constructor(object, domElement) {
+    super();
+    if (domElement === undefined) console.warn('THREE.OrbitControls: The second parameter "domElement" is now mandatory.');
+    if (domElement === document) console.error('THREE.OrbitControls: "document" should not be used as the target "domElement". Please use "renderer.domElement" instead.');
+    this.object = object;
+    this.domElement = domElement;
+    this.domElement.style.touchAction = 'none'; // disable touch scroll
+    // Set to false to disable this control
+
+    this.enabled = true; // "target" sets the location of focus, where the object orbits around
+
+    this.target = new _three.Vector3(); // How far you can dolly in and out ( PerspectiveCamera only )
+
+    this.minDistance = 0;
+    this.maxDistance = Infinity; // How far you can zoom in and out ( OrthographicCamera only )
+
+    this.minZoom = 0;
+    this.maxZoom = Infinity; // How far you can orbit vertically, upper and lower limits.
+    // Range is 0 to Math.PI radians.
+
+    this.minPolarAngle = 0; // radians
+
+    this.maxPolarAngle = Math.PI; // radians
+    // How far you can orbit horizontally, upper and lower limits.
+    // If set, the interval [ min, max ] must be a sub-interval of [ - 2 PI, 2 PI ], with ( max - min < 2 PI )
+
+    this.minAzimuthAngle = -Infinity; // radians
+
+    this.maxAzimuthAngle = Infinity; // radians
+    // Set to true to enable damping (inertia)
+    // If damping is enabled, you must call controls.update() in your animation loop
+
+    this.enableDamping = false;
+    this.dampingFactor = 0.05; // This option actually enables dollying in and out; left as "zoom" for backwards compatibility.
+    // Set to false to disable zooming
+
+    this.enableZoom = true;
+    this.zoomSpeed = 1.0; // Set to false to disable rotating
+
+    this.enableRotate = true;
+    this.rotateSpeed = 1.0; // Set to false to disable panning
+
+    this.enablePan = true;
+    this.panSpeed = 1.0;
+    this.screenSpacePanning = true; // if false, pan orthogonal to world-space direction camera.up
+
+    this.keyPanSpeed = 7.0; // pixels moved per arrow key push
+    // Set to true to automatically rotate around the target
+    // If auto-rotate is enabled, you must call controls.update() in your animation loop
+
+    this.autoRotate = false;
+    this.autoRotateSpeed = 2.0; // 30 seconds per orbit when fps is 60
+    // The four arrow keys
+
+    this.keys = {
+      LEFT: 'ArrowLeft',
+      UP: 'ArrowUp',
+      RIGHT: 'ArrowRight',
+      BOTTOM: 'ArrowDown'
+    }; // Mouse buttons
+
+    this.mouseButtons = {
+      LEFT: _three.MOUSE.ROTATE,
+      MIDDLE: _three.MOUSE.DOLLY,
+      RIGHT: _three.MOUSE.PAN
+    }; // Touch fingers
+
+    this.touches = {
+      ONE: _three.TOUCH.ROTATE,
+      TWO: _three.TOUCH.DOLLY_PAN
+    }; // for reset
+
+    this.target0 = this.target.clone();
+    this.position0 = this.object.position.clone();
+    this.zoom0 = this.object.zoom; // the target DOM element for key events
+
+    this._domElementKeyEvents = null; //
+    // public methods
+    //
+
+    this.getPolarAngle = function () {
+      return spherical.phi;
+    };
+
+    this.getAzimuthalAngle = function () {
+      return spherical.theta;
+    };
+
+    this.getDistance = function () {
+      return this.object.position.distanceTo(this.target);
+    };
+
+    this.listenToKeyEvents = function (domElement) {
+      domElement.addEventListener('keydown', onKeyDown);
+      this._domElementKeyEvents = domElement;
+    };
+
+    this.saveState = function () {
+      scope.target0.copy(scope.target);
+      scope.position0.copy(scope.object.position);
+      scope.zoom0 = scope.object.zoom;
+    };
+
+    this.reset = function () {
+      scope.target.copy(scope.target0);
+      scope.object.position.copy(scope.position0);
+      scope.object.zoom = scope.zoom0;
+      scope.object.updateProjectionMatrix();
+      scope.dispatchEvent(_changeEvent);
+      scope.update();
+      state = STATE.NONE;
+    }; // this method is exposed, but perhaps it would be better if we can make it private...
+
+
+    this.update = function () {
+      const offset = new _three.Vector3(); // so camera.up is the orbit axis
+
+      const quat = new _three.Quaternion().setFromUnitVectors(object.up, new _three.Vector3(0, 1, 0));
+      const quatInverse = quat.clone().invert();
+      const lastPosition = new _three.Vector3();
+      const lastQuaternion = new _three.Quaternion();
+      const twoPI = 2 * Math.PI;
+      return function update() {
+        const position = scope.object.position;
+        offset.copy(position).sub(scope.target); // rotate offset to "y-axis-is-up" space
+
+        offset.applyQuaternion(quat); // angle from z-axis around y-axis
+
+        spherical.setFromVector3(offset);
+
+        if (scope.autoRotate && state === STATE.NONE) {
+          rotateLeft(getAutoRotationAngle());
+        }
+
+        if (scope.enableDamping) {
+          spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+          spherical.phi += sphericalDelta.phi * scope.dampingFactor;
+        } else {
+          spherical.theta += sphericalDelta.theta;
+          spherical.phi += sphericalDelta.phi;
+        } // restrict theta to be between desired limits
+
+
+        let min = scope.minAzimuthAngle;
+        let max = scope.maxAzimuthAngle;
+
+        if (isFinite(min) && isFinite(max)) {
+          if (min < -Math.PI) min += twoPI;else if (min > Math.PI) min -= twoPI;
+          if (max < -Math.PI) max += twoPI;else if (max > Math.PI) max -= twoPI;
+
+          if (min <= max) {
+            spherical.theta = Math.max(min, Math.min(max, spherical.theta));
+          } else {
+            spherical.theta = spherical.theta > (min + max) / 2 ? Math.max(min, spherical.theta) : Math.min(max, spherical.theta);
+          }
+        } // restrict phi to be between desired limits
+
+
+        spherical.phi = Math.max(scope.minPolarAngle, Math.min(scope.maxPolarAngle, spherical.phi));
+        spherical.makeSafe();
+        spherical.radius *= scale; // restrict radius to be between desired limits
+
+        spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius)); // move target to panned location
+
+        if (scope.enableDamping === true) {
+          scope.target.addScaledVector(panOffset, scope.dampingFactor);
+        } else {
+          scope.target.add(panOffset);
+        }
+
+        offset.setFromSpherical(spherical); // rotate offset back to "camera-up-vector-is-up" space
+
+        offset.applyQuaternion(quatInverse);
+        position.copy(scope.target).add(offset);
+        scope.object.lookAt(scope.target);
+
+        if (scope.enableDamping === true) {
+          sphericalDelta.theta *= 1 - scope.dampingFactor;
+          sphericalDelta.phi *= 1 - scope.dampingFactor;
+          panOffset.multiplyScalar(1 - scope.dampingFactor);
+        } else {
+          sphericalDelta.set(0, 0, 0);
+          panOffset.set(0, 0, 0);
+        }
+
+        scale = 1; // update condition is:
+        // min(camera displacement, camera rotation in radians)^2 > EPS
+        // using small-angle approximation cos(x/2) = 1 - x^2 / 8
+
+        if (zoomChanged || lastPosition.distanceToSquared(scope.object.position) > EPS || 8 * (1 - lastQuaternion.dot(scope.object.quaternion)) > EPS) {
+          scope.dispatchEvent(_changeEvent);
+          lastPosition.copy(scope.object.position);
+          lastQuaternion.copy(scope.object.quaternion);
+          zoomChanged = false;
+          return true;
+        }
+
+        return false;
+      };
+    }();
+
+    this.dispose = function () {
+      scope.domElement.removeEventListener('contextmenu', onContextMenu);
+      scope.domElement.removeEventListener('pointerdown', onPointerDown);
+      scope.domElement.removeEventListener('pointercancel', onPointerCancel);
+      scope.domElement.removeEventListener('wheel', onMouseWheel);
+      scope.domElement.removeEventListener('pointermove', onPointerMove);
+      scope.domElement.removeEventListener('pointerup', onPointerUp);
+
+      if (scope._domElementKeyEvents !== null) {
+        scope._domElementKeyEvents.removeEventListener('keydown', onKeyDown);
+      } //scope.dispatchEvent( { type: 'dispose' } ); // should this be added here?
+
+    }; //
+    // internals
+    //
+
+
+    const scope = this;
+    const STATE = {
+      NONE: -1,
+      ROTATE: 0,
+      DOLLY: 1,
+      PAN: 2,
+      TOUCH_ROTATE: 3,
+      TOUCH_PAN: 4,
+      TOUCH_DOLLY_PAN: 5,
+      TOUCH_DOLLY_ROTATE: 6
+    };
+    let state = STATE.NONE;
+    const EPS = 0.000001; // current position in spherical coordinates
+
+    const spherical = new _three.Spherical();
+    const sphericalDelta = new _three.Spherical();
+    let scale = 1;
+    const panOffset = new _three.Vector3();
+    let zoomChanged = false;
+    const rotateStart = new _three.Vector2();
+    const rotateEnd = new _three.Vector2();
+    const rotateDelta = new _three.Vector2();
+    const panStart = new _three.Vector2();
+    const panEnd = new _three.Vector2();
+    const panDelta = new _three.Vector2();
+    const dollyStart = new _three.Vector2();
+    const dollyEnd = new _three.Vector2();
+    const dollyDelta = new _three.Vector2();
+    const pointers = [];
+    const pointerPositions = {};
+
+    function getAutoRotationAngle() {
+      return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
+    }
+
+    function getZoomScale() {
+      return Math.pow(0.95, scope.zoomSpeed);
+    }
+
+    function rotateLeft(angle) {
+      sphericalDelta.theta -= angle;
+    }
+
+    function rotateUp(angle) {
+      sphericalDelta.phi -= angle;
+    }
+
+    const panLeft = function () {
+      const v = new _three.Vector3();
+      return function panLeft(distance, objectMatrix) {
+        v.setFromMatrixColumn(objectMatrix, 0); // get X column of objectMatrix
+
+        v.multiplyScalar(-distance);
+        panOffset.add(v);
+      };
+    }();
+
+    const panUp = function () {
+      const v = new _three.Vector3();
+      return function panUp(distance, objectMatrix) {
+        if (scope.screenSpacePanning === true) {
+          v.setFromMatrixColumn(objectMatrix, 1);
+        } else {
+          v.setFromMatrixColumn(objectMatrix, 0);
+          v.crossVectors(scope.object.up, v);
+        }
+
+        v.multiplyScalar(distance);
+        panOffset.add(v);
+      };
+    }(); // deltaX and deltaY are in pixels; right and down are positive
+
+
+    const pan = function () {
+      const offset = new _three.Vector3();
+      return function pan(deltaX, deltaY) {
+        const element = scope.domElement;
+
+        if (scope.object.isPerspectiveCamera) {
+          // perspective
+          const position = scope.object.position;
+          offset.copy(position).sub(scope.target);
+          let targetDistance = offset.length(); // half of the fov is center to top of screen
+
+          targetDistance *= Math.tan(scope.object.fov / 2 * Math.PI / 180.0); // we use only clientHeight here so aspect ratio does not distort speed
+
+          panLeft(2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix);
+          panUp(2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix);
+        } else if (scope.object.isOrthographicCamera) {
+          // orthographic
+          panLeft(deltaX * (scope.object.right - scope.object.left) / scope.object.zoom / element.clientWidth, scope.object.matrix);
+          panUp(deltaY * (scope.object.top - scope.object.bottom) / scope.object.zoom / element.clientHeight, scope.object.matrix);
+        } else {
+          // camera neither orthographic nor perspective
+          console.warn('WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.');
+          scope.enablePan = false;
+        }
+      };
+    }();
+
+    function dollyOut(dollyScale) {
+      if (scope.object.isPerspectiveCamera) {
+        scale /= dollyScale;
+      } else if (scope.object.isOrthographicCamera) {
+        scope.object.zoom = Math.max(scope.minZoom, Math.min(scope.maxZoom, scope.object.zoom * dollyScale));
+        scope.object.updateProjectionMatrix();
+        zoomChanged = true;
+      } else {
+        console.warn('WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.');
+        scope.enableZoom = false;
+      }
+    }
+
+    function dollyIn(dollyScale) {
+      if (scope.object.isPerspectiveCamera) {
+        scale *= dollyScale;
+      } else if (scope.object.isOrthographicCamera) {
+        scope.object.zoom = Math.max(scope.minZoom, Math.min(scope.maxZoom, scope.object.zoom / dollyScale));
+        scope.object.updateProjectionMatrix();
+        zoomChanged = true;
+      } else {
+        console.warn('WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.');
+        scope.enableZoom = false;
+      }
+    } //
+    // event callbacks - update the object state
+    //
+
+
+    function handleMouseDownRotate(event) {
+      rotateStart.set(event.clientX, event.clientY);
+    }
+
+    function handleMouseDownDolly(event) {
+      dollyStart.set(event.clientX, event.clientY);
+    }
+
+    function handleMouseDownPan(event) {
+      panStart.set(event.clientX, event.clientY);
+    }
+
+    function handleMouseMoveRotate(event) {
+      rotateEnd.set(event.clientX, event.clientY);
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(scope.rotateSpeed);
+      const element = scope.domElement;
+      rotateLeft(2 * Math.PI * rotateDelta.x / element.clientHeight); // yes, height
+
+      rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight);
+      rotateStart.copy(rotateEnd);
+      scope.update();
+    }
+
+    function handleMouseMoveDolly(event) {
+      dollyEnd.set(event.clientX, event.clientY);
+      dollyDelta.subVectors(dollyEnd, dollyStart);
+
+      if (dollyDelta.y > 0) {
+        dollyOut(getZoomScale());
+      } else if (dollyDelta.y < 0) {
+        dollyIn(getZoomScale());
+      }
+
+      dollyStart.copy(dollyEnd);
+      scope.update();
+    }
+
+    function handleMouseMovePan(event) {
+      panEnd.set(event.clientX, event.clientY);
+      panDelta.subVectors(panEnd, panStart).multiplyScalar(scope.panSpeed);
+      pan(panDelta.x, panDelta.y);
+      panStart.copy(panEnd);
+      scope.update();
+    }
+
+    function handleMouseWheel(event) {
+      if (event.deltaY < 0) {
+        dollyIn(getZoomScale());
+      } else if (event.deltaY > 0) {
+        dollyOut(getZoomScale());
+      }
+
+      scope.update();
+    }
+
+    function handleKeyDown(event) {
+      let needsUpdate = false;
+
+      switch (event.code) {
+        case scope.keys.UP:
+          pan(0, scope.keyPanSpeed);
+          needsUpdate = true;
+          break;
+
+        case scope.keys.BOTTOM:
+          pan(0, -scope.keyPanSpeed);
+          needsUpdate = true;
+          break;
+
+        case scope.keys.LEFT:
+          pan(scope.keyPanSpeed, 0);
+          needsUpdate = true;
+          break;
+
+        case scope.keys.RIGHT:
+          pan(-scope.keyPanSpeed, 0);
+          needsUpdate = true;
+          break;
+      }
+
+      if (needsUpdate) {
+        // prevent the browser from scrolling on cursor keys
+        event.preventDefault();
+        scope.update();
+      }
+    }
+
+    function handleTouchStartRotate() {
+      if (pointers.length === 1) {
+        rotateStart.set(pointers[0].pageX, pointers[0].pageY);
+      } else {
+        const x = 0.5 * (pointers[0].pageX + pointers[1].pageX);
+        const y = 0.5 * (pointers[0].pageY + pointers[1].pageY);
+        rotateStart.set(x, y);
+      }
+    }
+
+    function handleTouchStartPan() {
+      if (pointers.length === 1) {
+        panStart.set(pointers[0].pageX, pointers[0].pageY);
+      } else {
+        const x = 0.5 * (pointers[0].pageX + pointers[1].pageX);
+        const y = 0.5 * (pointers[0].pageY + pointers[1].pageY);
+        panStart.set(x, y);
+      }
+    }
+
+    function handleTouchStartDolly() {
+      const dx = pointers[0].pageX - pointers[1].pageX;
+      const dy = pointers[0].pageY - pointers[1].pageY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      dollyStart.set(0, distance);
+    }
+
+    function handleTouchStartDollyPan() {
+      if (scope.enableZoom) handleTouchStartDolly();
+      if (scope.enablePan) handleTouchStartPan();
+    }
+
+    function handleTouchStartDollyRotate() {
+      if (scope.enableZoom) handleTouchStartDolly();
+      if (scope.enableRotate) handleTouchStartRotate();
+    }
+
+    function handleTouchMoveRotate(event) {
+      if (pointers.length == 1) {
+        rotateEnd.set(event.pageX, event.pageY);
+      } else {
+        const position = getSecondPointerPosition(event);
+        const x = 0.5 * (event.pageX + position.x);
+        const y = 0.5 * (event.pageY + position.y);
+        rotateEnd.set(x, y);
+      }
+
+      rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(scope.rotateSpeed);
+      const element = scope.domElement;
+      rotateLeft(2 * Math.PI * rotateDelta.x / element.clientHeight); // yes, height
+
+      rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight);
+      rotateStart.copy(rotateEnd);
+    }
+
+    function handleTouchMovePan(event) {
+      if (pointers.length === 1) {
+        panEnd.set(event.pageX, event.pageY);
+      } else {
+        const position = getSecondPointerPosition(event);
+        const x = 0.5 * (event.pageX + position.x);
+        const y = 0.5 * (event.pageY + position.y);
+        panEnd.set(x, y);
+      }
+
+      panDelta.subVectors(panEnd, panStart).multiplyScalar(scope.panSpeed);
+      pan(panDelta.x, panDelta.y);
+      panStart.copy(panEnd);
+    }
+
+    function handleTouchMoveDolly(event) {
+      const position = getSecondPointerPosition(event);
+      const dx = event.pageX - position.x;
+      const dy = event.pageY - position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      dollyEnd.set(0, distance);
+      dollyDelta.set(0, Math.pow(dollyEnd.y / dollyStart.y, scope.zoomSpeed));
+      dollyOut(dollyDelta.y);
+      dollyStart.copy(dollyEnd);
+    }
+
+    function handleTouchMoveDollyPan(event) {
+      if (scope.enableZoom) handleTouchMoveDolly(event);
+      if (scope.enablePan) handleTouchMovePan(event);
+    }
+
+    function handleTouchMoveDollyRotate(event) {
+      if (scope.enableZoom) handleTouchMoveDolly(event);
+      if (scope.enableRotate) handleTouchMoveRotate(event);
+    } //
+    // event handlers - FSM: listen for events and reset state
+    //
+
+
+    function onPointerDown(event) {
+      if (scope.enabled === false) return;
+
+      if (pointers.length === 0) {
+        scope.domElement.setPointerCapture(event.pointerId);
+        scope.domElement.addEventListener('pointermove', onPointerMove);
+        scope.domElement.addEventListener('pointerup', onPointerUp);
+      } //
+
+
+      addPointer(event);
+
+      if (event.pointerType === 'touch') {
+        onTouchStart(event);
+      } else {
+        onMouseDown(event);
+      }
+    }
+
+    function onPointerMove(event) {
+      if (scope.enabled === false) return;
+
+      if (event.pointerType === 'touch') {
+        onTouchMove(event);
+      } else {
+        onMouseMove(event);
+      }
+    }
+
+    function onPointerUp(event) {
+      removePointer(event);
+
+      if (pointers.length === 0) {
+        scope.domElement.releasePointerCapture(event.pointerId);
+        scope.domElement.removeEventListener('pointermove', onPointerMove);
+        scope.domElement.removeEventListener('pointerup', onPointerUp);
+      }
+
+      scope.dispatchEvent(_endEvent);
+      state = STATE.NONE;
+    }
+
+    function onPointerCancel(event) {
+      removePointer(event);
+    }
+
+    function onMouseDown(event) {
+      let mouseAction;
+
+      switch (event.button) {
+        case 0:
+          mouseAction = scope.mouseButtons.LEFT;
+          break;
+
+        case 1:
+          mouseAction = scope.mouseButtons.MIDDLE;
+          break;
+
+        case 2:
+          mouseAction = scope.mouseButtons.RIGHT;
+          break;
+
+        default:
+          mouseAction = -1;
+      }
+
+      switch (mouseAction) {
+        case _three.MOUSE.DOLLY:
+          if (scope.enableZoom === false) return;
+          handleMouseDownDolly(event);
+          state = STATE.DOLLY;
+          break;
+
+        case _three.MOUSE.ROTATE:
+          if (event.ctrlKey || event.metaKey || event.shiftKey) {
+            if (scope.enablePan === false) return;
+            handleMouseDownPan(event);
+            state = STATE.PAN;
+          } else {
+            if (scope.enableRotate === false) return;
+            handleMouseDownRotate(event);
+            state = STATE.ROTATE;
+          }
+
+          break;
+
+        case _three.MOUSE.PAN:
+          if (event.ctrlKey || event.metaKey || event.shiftKey) {
+            if (scope.enableRotate === false) return;
+            handleMouseDownRotate(event);
+            state = STATE.ROTATE;
+          } else {
+            if (scope.enablePan === false) return;
+            handleMouseDownPan(event);
+            state = STATE.PAN;
+          }
+
+          break;
+
+        default:
+          state = STATE.NONE;
+      }
+
+      if (state !== STATE.NONE) {
+        scope.dispatchEvent(_startEvent);
+      }
+    }
+
+    function onMouseMove(event) {
+      if (scope.enabled === false) return;
+
+      switch (state) {
+        case STATE.ROTATE:
+          if (scope.enableRotate === false) return;
+          handleMouseMoveRotate(event);
+          break;
+
+        case STATE.DOLLY:
+          if (scope.enableZoom === false) return;
+          handleMouseMoveDolly(event);
+          break;
+
+        case STATE.PAN:
+          if (scope.enablePan === false) return;
+          handleMouseMovePan(event);
+          break;
+      }
+    }
+
+    function onMouseWheel(event) {
+      if (scope.enabled === false || scope.enableZoom === false || state !== STATE.NONE) return;
+      event.preventDefault();
+      scope.dispatchEvent(_startEvent);
+      handleMouseWheel(event);
+      scope.dispatchEvent(_endEvent);
+    }
+
+    function onKeyDown(event) {
+      if (scope.enabled === false || scope.enablePan === false) return;
+      handleKeyDown(event);
+    }
+
+    function onTouchStart(event) {
+      trackPointer(event);
+
+      switch (pointers.length) {
+        case 1:
+          switch (scope.touches.ONE) {
+            case _three.TOUCH.ROTATE:
+              if (scope.enableRotate === false) return;
+              handleTouchStartRotate();
+              state = STATE.TOUCH_ROTATE;
+              break;
+
+            case _three.TOUCH.PAN:
+              if (scope.enablePan === false) return;
+              handleTouchStartPan();
+              state = STATE.TOUCH_PAN;
+              break;
+
+            default:
+              state = STATE.NONE;
+          }
+
+          break;
+
+        case 2:
+          switch (scope.touches.TWO) {
+            case _three.TOUCH.DOLLY_PAN:
+              if (scope.enableZoom === false && scope.enablePan === false) return;
+              handleTouchStartDollyPan();
+              state = STATE.TOUCH_DOLLY_PAN;
+              break;
+
+            case _three.TOUCH.DOLLY_ROTATE:
+              if (scope.enableZoom === false && scope.enableRotate === false) return;
+              handleTouchStartDollyRotate();
+              state = STATE.TOUCH_DOLLY_ROTATE;
+              break;
+
+            default:
+              state = STATE.NONE;
+          }
+
+          break;
+
+        default:
+          state = STATE.NONE;
+      }
+
+      if (state !== STATE.NONE) {
+        scope.dispatchEvent(_startEvent);
+      }
+    }
+
+    function onTouchMove(event) {
+      trackPointer(event);
+
+      switch (state) {
+        case STATE.TOUCH_ROTATE:
+          if (scope.enableRotate === false) return;
+          handleTouchMoveRotate(event);
+          scope.update();
+          break;
+
+        case STATE.TOUCH_PAN:
+          if (scope.enablePan === false) return;
+          handleTouchMovePan(event);
+          scope.update();
+          break;
+
+        case STATE.TOUCH_DOLLY_PAN:
+          if (scope.enableZoom === false && scope.enablePan === false) return;
+          handleTouchMoveDollyPan(event);
+          scope.update();
+          break;
+
+        case STATE.TOUCH_DOLLY_ROTATE:
+          if (scope.enableZoom === false && scope.enableRotate === false) return;
+          handleTouchMoveDollyRotate(event);
+          scope.update();
+          break;
+
+        default:
+          state = STATE.NONE;
+      }
+    }
+
+    function onContextMenu(event) {
+      if (scope.enabled === false) return;
+      event.preventDefault();
+    }
+
+    function addPointer(event) {
+      pointers.push(event);
+    }
+
+    function removePointer(event) {
+      delete pointerPositions[event.pointerId];
+
+      for (let i = 0; i < pointers.length; i++) {
+        if (pointers[i].pointerId == event.pointerId) {
+          pointers.splice(i, 1);
+          return;
+        }
+      }
+    }
+
+    function trackPointer(event) {
+      let position = pointerPositions[event.pointerId];
+
+      if (position === undefined) {
+        position = new _three.Vector2();
+        pointerPositions[event.pointerId] = position;
+      }
+
+      position.set(event.pageX, event.pageY);
+    }
+
+    function getSecondPointerPosition(event) {
+      const pointer = event.pointerId === pointers[0].pointerId ? pointers[1] : pointers[0];
+      return pointerPositions[pointer.pointerId];
+    } //
+
+
+    scope.domElement.addEventListener('contextmenu', onContextMenu);
+    scope.domElement.addEventListener('pointerdown', onPointerDown);
+    scope.domElement.addEventListener('pointercancel', onPointerCancel);
+    scope.domElement.addEventListener('wheel', onMouseWheel, {
+      passive: false
+    }); // force an update at start
+
+    this.update();
+  }
+
+} // This set of controls performs orbiting, dollying (zooming), and panning.
+// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
+// This is very similar to OrbitControls, another set of touch behavior
+//
+//    Orbit - right mouse, or left mouse + ctrl/meta/shiftKey / touch: two-finger rotate
+//    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
+//    Pan - left mouse, or arrow keys / touch: one-finger move
+
+
+exports.OrbitControls = OrbitControls;
+
+class MapControls extends OrbitControls {
+  constructor(object, domElement) {
+    super(object, domElement);
+    this.screenSpacePanning = false; // pan orthogonal to world-space direction camera.up
+
+    this.mouseButtons.LEFT = _three.MOUSE.PAN;
+    this.mouseButtons.RIGHT = _three.MOUSE.ROTATE;
+    this.touches.ONE = _three.TOUCH.PAN;
+    this.touches.TWO = _three.TOUCH.DOLLY_ROTATE;
+  }
+
+}
+
+exports.MapControls = MapControls;
+},{"three":"../node_modules/three/build/three.module.js"}],"../node_modules/gsap/gsap-core.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -45339,630 +48318,6 @@ var _setterPlain = function _setterPlain(target, property, value) {
   parent._pt = first;
 }; //PropTween key: t = target, p = prop, r = renderer, d = data, s = start, c = change, op = overwriteProperty (ONLY populated when it's different than p), pr = priority, _next/_prev for the linked list siblings, set = setter, m = modifier, mSet = modifierSetter (the original setter, before a modifier was added)
 
-<<<<<<< HEAD
-exports.MapControls = MapControls;
-},{"three":"../node_modules/three/build/three.module.js"}],"../node_modules/three/examples/jsm/objects/MarchingCubes.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.triTable = exports.edgeTable = exports.MarchingCubes = void 0;
-
-var _three = require("three");
-
-/**
- * Port of http://webglsamples.org/blob/blob.html
- */
-class MarchingCubes extends _three.Mesh {
-  constructor(resolution, material, enableUvs = false, enableColors = false, maxPolyCount = 10000) {
-    const geometry = new _three.BufferGeometry();
-    super(geometry, material);
-    const scope = this; // temp buffers used in polygonize
-
-    const vlist = new Float32Array(12 * 3);
-    const nlist = new Float32Array(12 * 3);
-    const clist = new Float32Array(12 * 3);
-    this.enableUvs = enableUvs;
-    this.enableColors = enableColors; // functions have to be object properties
-    // prototype functions kill performance
-    // (tested and it was 4x slower !!!)
-
-    this.init = function (resolution) {
-      this.resolution = resolution; // parameters
-
-      this.isolation = 80.0; // size of field, 32 is pushing it in Javascript :)
-
-      this.size = resolution;
-      this.size2 = this.size * this.size;
-      this.size3 = this.size2 * this.size;
-      this.halfsize = this.size / 2.0; // deltas
-
-      this.delta = 2.0 / this.size;
-      this.yd = this.size;
-      this.zd = this.size2;
-      this.field = new Float32Array(this.size3);
-      this.normal_cache = new Float32Array(this.size3 * 3);
-      this.palette = new Float32Array(this.size3 * 3); //
-
-      this.count = 0;
-      const maxVertexCount = maxPolyCount * 3;
-      this.positionArray = new Float32Array(maxVertexCount * 3);
-      const positionAttribute = new _three.BufferAttribute(this.positionArray, 3);
-      positionAttribute.setUsage(_three.DynamicDrawUsage);
-      geometry.setAttribute('position', positionAttribute);
-      this.normalArray = new Float32Array(maxVertexCount * 3);
-      const normalAttribute = new _three.BufferAttribute(this.normalArray, 3);
-      normalAttribute.setUsage(_three.DynamicDrawUsage);
-      geometry.setAttribute('normal', normalAttribute);
-
-      if (this.enableUvs) {
-        this.uvArray = new Float32Array(maxVertexCount * 2);
-        const uvAttribute = new _three.BufferAttribute(this.uvArray, 2);
-        uvAttribute.setUsage(_three.DynamicDrawUsage);
-        geometry.setAttribute('uv', uvAttribute);
-      }
-
-      if (this.enableColors) {
-        this.colorArray = new Float32Array(maxVertexCount * 3);
-        const colorAttribute = new _three.BufferAttribute(this.colorArray, 3);
-        colorAttribute.setUsage(_three.DynamicDrawUsage);
-        geometry.setAttribute('color', colorAttribute);
-      }
-    }; ///////////////////////
-    // Polygonization
-    ///////////////////////
-
-
-    function lerp(a, b, t) {
-      return a + (b - a) * t;
-    }
-
-    function VIntX(q, offset, isol, x, y, z, valp1, valp2, c_offset1, c_offset2) {
-      const mu = (isol - valp1) / (valp2 - valp1),
-            nc = scope.normal_cache;
-      vlist[offset + 0] = x + mu * scope.delta;
-      vlist[offset + 1] = y;
-      vlist[offset + 2] = z;
-      nlist[offset + 0] = lerp(nc[q + 0], nc[q + 3], mu);
-      nlist[offset + 1] = lerp(nc[q + 1], nc[q + 4], mu);
-      nlist[offset + 2] = lerp(nc[q + 2], nc[q + 5], mu);
-      clist[offset + 0] = lerp(scope.palette[c_offset1 * 3 + 0], scope.palette[c_offset2 * 3 + 0], mu);
-      clist[offset + 1] = lerp(scope.palette[c_offset1 * 3 + 1], scope.palette[c_offset2 * 3 + 1], mu);
-      clist[offset + 2] = lerp(scope.palette[c_offset1 * 3 + 2], scope.palette[c_offset2 * 3 + 2], mu);
-    }
-
-    function VIntY(q, offset, isol, x, y, z, valp1, valp2, c_offset1, c_offset2) {
-      const mu = (isol - valp1) / (valp2 - valp1),
-            nc = scope.normal_cache;
-      vlist[offset + 0] = x;
-      vlist[offset + 1] = y + mu * scope.delta;
-      vlist[offset + 2] = z;
-      const q2 = q + scope.yd * 3;
-      nlist[offset + 0] = lerp(nc[q + 0], nc[q2 + 0], mu);
-      nlist[offset + 1] = lerp(nc[q + 1], nc[q2 + 1], mu);
-      nlist[offset + 2] = lerp(nc[q + 2], nc[q2 + 2], mu);
-      clist[offset + 0] = lerp(scope.palette[c_offset1 * 3 + 0], scope.palette[c_offset2 * 3 + 0], mu);
-      clist[offset + 1] = lerp(scope.palette[c_offset1 * 3 + 1], scope.palette[c_offset2 * 3 + 1], mu);
-      clist[offset + 2] = lerp(scope.palette[c_offset1 * 3 + 2], scope.palette[c_offset2 * 3 + 2], mu);
-    }
-
-    function VIntZ(q, offset, isol, x, y, z, valp1, valp2, c_offset1, c_offset2) {
-      const mu = (isol - valp1) / (valp2 - valp1),
-            nc = scope.normal_cache;
-      vlist[offset + 0] = x;
-      vlist[offset + 1] = y;
-      vlist[offset + 2] = z + mu * scope.delta;
-      const q2 = q + scope.zd * 3;
-      nlist[offset + 0] = lerp(nc[q + 0], nc[q2 + 0], mu);
-      nlist[offset + 1] = lerp(nc[q + 1], nc[q2 + 1], mu);
-      nlist[offset + 2] = lerp(nc[q + 2], nc[q2 + 2], mu);
-      clist[offset + 0] = lerp(scope.palette[c_offset1 * 3 + 0], scope.palette[c_offset2 * 3 + 0], mu);
-      clist[offset + 1] = lerp(scope.palette[c_offset1 * 3 + 1], scope.palette[c_offset2 * 3 + 1], mu);
-      clist[offset + 2] = lerp(scope.palette[c_offset1 * 3 + 2], scope.palette[c_offset2 * 3 + 2], mu);
-    }
-
-    function compNorm(q) {
-      const q3 = q * 3;
-
-      if (scope.normal_cache[q3] === 0.0) {
-        scope.normal_cache[q3 + 0] = scope.field[q - 1] - scope.field[q + 1];
-        scope.normal_cache[q3 + 1] = scope.field[q - scope.yd] - scope.field[q + scope.yd];
-        scope.normal_cache[q3 + 2] = scope.field[q - scope.zd] - scope.field[q + scope.zd];
-      }
-    } // Returns total number of triangles. Fills triangles.
-    // (this is where most of time is spent - it's inner work of O(n3) loop )
-
-
-    function polygonize(fx, fy, fz, q, isol) {
-      // cache indices
-      const q1 = q + 1,
-            qy = q + scope.yd,
-            qz = q + scope.zd,
-            q1y = q1 + scope.yd,
-            q1z = q1 + scope.zd,
-            qyz = q + scope.yd + scope.zd,
-            q1yz = q1 + scope.yd + scope.zd;
-      let cubeindex = 0;
-      const field0 = scope.field[q],
-            field1 = scope.field[q1],
-            field2 = scope.field[qy],
-            field3 = scope.field[q1y],
-            field4 = scope.field[qz],
-            field5 = scope.field[q1z],
-            field6 = scope.field[qyz],
-            field7 = scope.field[q1yz];
-      if (field0 < isol) cubeindex |= 1;
-      if (field1 < isol) cubeindex |= 2;
-      if (field2 < isol) cubeindex |= 8;
-      if (field3 < isol) cubeindex |= 4;
-      if (field4 < isol) cubeindex |= 16;
-      if (field5 < isol) cubeindex |= 32;
-      if (field6 < isol) cubeindex |= 128;
-      if (field7 < isol) cubeindex |= 64; // if cube is entirely in/out of the surface - bail, nothing to draw
-
-      const bits = edgeTable[cubeindex];
-      if (bits === 0) return 0;
-      const d = scope.delta,
-            fx2 = fx + d,
-            fy2 = fy + d,
-            fz2 = fz + d; // top of the cube
-
-      if (bits & 1) {
-        compNorm(q);
-        compNorm(q1);
-        VIntX(q * 3, 0, isol, fx, fy, fz, field0, field1, q, q1);
-      }
-
-      if (bits & 2) {
-        compNorm(q1);
-        compNorm(q1y);
-        VIntY(q1 * 3, 3, isol, fx2, fy, fz, field1, field3, q1, q1y);
-      }
-
-      if (bits & 4) {
-        compNorm(qy);
-        compNorm(q1y);
-        VIntX(qy * 3, 6, isol, fx, fy2, fz, field2, field3, qy, q1y);
-      }
-
-      if (bits & 8) {
-        compNorm(q);
-        compNorm(qy);
-        VIntY(q * 3, 9, isol, fx, fy, fz, field0, field2, q, qy);
-      } // bottom of the cube
-
-
-      if (bits & 16) {
-        compNorm(qz);
-        compNorm(q1z);
-        VIntX(qz * 3, 12, isol, fx, fy, fz2, field4, field5, qz, q1z);
-      }
-
-      if (bits & 32) {
-        compNorm(q1z);
-        compNorm(q1yz);
-        VIntY(q1z * 3, 15, isol, fx2, fy, fz2, field5, field7, q1z, q1yz);
-      }
-
-      if (bits & 64) {
-        compNorm(qyz);
-        compNorm(q1yz);
-        VIntX(qyz * 3, 18, isol, fx, fy2, fz2, field6, field7, qyz, q1yz);
-      }
-
-      if (bits & 128) {
-        compNorm(qz);
-        compNorm(qyz);
-        VIntY(qz * 3, 21, isol, fx, fy, fz2, field4, field6, qz, qyz);
-      } // vertical lines of the cube
-
-
-      if (bits & 256) {
-        compNorm(q);
-        compNorm(qz);
-        VIntZ(q * 3, 24, isol, fx, fy, fz, field0, field4, q, qz);
-      }
-
-      if (bits & 512) {
-        compNorm(q1);
-        compNorm(q1z);
-        VIntZ(q1 * 3, 27, isol, fx2, fy, fz, field1, field5, q1, q1z);
-      }
-
-      if (bits & 1024) {
-        compNorm(q1y);
-        compNorm(q1yz);
-        VIntZ(q1y * 3, 30, isol, fx2, fy2, fz, field3, field7, q1y, q1yz);
-      }
-
-      if (bits & 2048) {
-        compNorm(qy);
-        compNorm(qyz);
-        VIntZ(qy * 3, 33, isol, fx, fy2, fz, field2, field6, qy, qyz);
-      }
-
-      cubeindex <<= 4; // re-purpose cubeindex into an offset into triTable
-
-      let o1,
-          o2,
-          o3,
-          numtris = 0,
-          i = 0; // here is where triangles are created
-
-      while (triTable[cubeindex + i] != -1) {
-        o1 = cubeindex + i;
-        o2 = o1 + 1;
-        o3 = o1 + 2;
-        posnormtriv(vlist, nlist, clist, 3 * triTable[o1], 3 * triTable[o2], 3 * triTable[o3]);
-        i += 3;
-        numtris++;
-      }
-
-      return numtris;
-    }
-
-    function posnormtriv(pos, norm, colors, o1, o2, o3) {
-      const c = scope.count * 3; // positions
-
-      scope.positionArray[c + 0] = pos[o1];
-      scope.positionArray[c + 1] = pos[o1 + 1];
-      scope.positionArray[c + 2] = pos[o1 + 2];
-      scope.positionArray[c + 3] = pos[o2];
-      scope.positionArray[c + 4] = pos[o2 + 1];
-      scope.positionArray[c + 5] = pos[o2 + 2];
-      scope.positionArray[c + 6] = pos[o3];
-      scope.positionArray[c + 7] = pos[o3 + 1];
-      scope.positionArray[c + 8] = pos[o3 + 2]; // normals
-
-      if (scope.material.flatShading === true) {
-        const nx = (norm[o1 + 0] + norm[o2 + 0] + norm[o3 + 0]) / 3;
-        const ny = (norm[o1 + 1] + norm[o2 + 1] + norm[o3 + 1]) / 3;
-        const nz = (norm[o1 + 2] + norm[o2 + 2] + norm[o3 + 2]) / 3;
-        scope.normalArray[c + 0] = nx;
-        scope.normalArray[c + 1] = ny;
-        scope.normalArray[c + 2] = nz;
-        scope.normalArray[c + 3] = nx;
-        scope.normalArray[c + 4] = ny;
-        scope.normalArray[c + 5] = nz;
-        scope.normalArray[c + 6] = nx;
-        scope.normalArray[c + 7] = ny;
-        scope.normalArray[c + 8] = nz;
-      } else {
-        scope.normalArray[c + 0] = norm[o1 + 0];
-        scope.normalArray[c + 1] = norm[o1 + 1];
-        scope.normalArray[c + 2] = norm[o1 + 2];
-        scope.normalArray[c + 3] = norm[o2 + 0];
-        scope.normalArray[c + 4] = norm[o2 + 1];
-        scope.normalArray[c + 5] = norm[o2 + 2];
-        scope.normalArray[c + 6] = norm[o3 + 0];
-        scope.normalArray[c + 7] = norm[o3 + 1];
-        scope.normalArray[c + 8] = norm[o3 + 2];
-      } // uvs
-
-
-      if (scope.enableUvs) {
-        const d = scope.count * 2;
-        scope.uvArray[d + 0] = pos[o1 + 0];
-        scope.uvArray[d + 1] = pos[o1 + 2];
-        scope.uvArray[d + 2] = pos[o2 + 0];
-        scope.uvArray[d + 3] = pos[o2 + 2];
-        scope.uvArray[d + 4] = pos[o3 + 0];
-        scope.uvArray[d + 5] = pos[o3 + 2];
-      } // colors
-
-
-      if (scope.enableColors) {
-        scope.colorArray[c + 0] = colors[o1 + 0];
-        scope.colorArray[c + 1] = colors[o1 + 1];
-        scope.colorArray[c + 2] = colors[o1 + 2];
-        scope.colorArray[c + 3] = colors[o2 + 0];
-        scope.colorArray[c + 4] = colors[o2 + 1];
-        scope.colorArray[c + 5] = colors[o2 + 2];
-        scope.colorArray[c + 6] = colors[o3 + 0];
-        scope.colorArray[c + 7] = colors[o3 + 1];
-        scope.colorArray[c + 8] = colors[o3 + 2];
-      }
-
-      scope.count += 3;
-    } /////////////////////////////////////
-    // Metaballs
-    /////////////////////////////////////
-    // Adds a reciprocal ball (nice and blobby) that, to be fast, fades to zero after
-    // a fixed distance, determined by strength and subtract.
-
-
-    this.addBall = function (ballx, bally, ballz, strength, subtract, colors) {
-      const sign = Math.sign(strength);
-      strength = Math.abs(strength);
-      const userDefineColor = !(colors === undefined || colors === null);
-      let ballColor = new _three.Color(ballx, bally, ballz);
-
-      if (userDefineColor) {
-        try {
-          ballColor = colors instanceof _three.Color ? colors : Array.isArray(colors) ? new _three.Color(Math.min(Math.abs(colors[0]), 1), Math.min(Math.abs(colors[1]), 1), Math.min(Math.abs(colors[2]), 1)) : new _three.Color(colors);
-        } catch (err) {
-          ballColor = new _three.Color(ballx, bally, ballz);
-        }
-      } // Let's solve the equation to find the radius:
-      // 1.0 / (0.000001 + radius^2) * strength - subtract = 0
-      // strength / (radius^2) = subtract
-      // strength = subtract * radius^2
-      // radius^2 = strength / subtract
-      // radius = sqrt(strength / subtract)
-
-
-      const radius = this.size * Math.sqrt(strength / subtract),
-            zs = ballz * this.size,
-            ys = bally * this.size,
-            xs = ballx * this.size;
-      let min_z = Math.floor(zs - radius);
-      if (min_z < 1) min_z = 1;
-      let max_z = Math.floor(zs + radius);
-      if (max_z > this.size - 1) max_z = this.size - 1;
-      let min_y = Math.floor(ys - radius);
-      if (min_y < 1) min_y = 1;
-      let max_y = Math.floor(ys + radius);
-      if (max_y > this.size - 1) max_y = this.size - 1;
-      let min_x = Math.floor(xs - radius);
-      if (min_x < 1) min_x = 1;
-      let max_x = Math.floor(xs + radius);
-      if (max_x > this.size - 1) max_x = this.size - 1; // Don't polygonize in the outer layer because normals aren't
-      // well-defined there.
-
-      let x, y, z, y_offset, z_offset, fx, fy, fz, fz2, fy2, val;
-
-      for (z = min_z; z < max_z; z++) {
-        z_offset = this.size2 * z;
-        fz = z / this.size - ballz;
-        fz2 = fz * fz;
-
-        for (y = min_y; y < max_y; y++) {
-          y_offset = z_offset + this.size * y;
-          fy = y / this.size - bally;
-          fy2 = fy * fy;
-
-          for (x = min_x; x < max_x; x++) {
-            fx = x / this.size - ballx;
-            val = strength / (0.000001 + fx * fx + fy2 + fz2) - subtract;
-
-            if (val > 0.0) {
-              this.field[y_offset + x] += val * sign; // optimization
-              // http://www.geisswerks.com/ryan/BLOBS/blobs.html
-
-              const ratio = Math.sqrt((x - xs) * (x - xs) + (y - ys) * (y - ys) + (z - zs) * (z - zs)) / radius;
-              const contrib = 1 - ratio * ratio * ratio * (ratio * (ratio * 6 - 15) + 10);
-              this.palette[(y_offset + x) * 3 + 0] += ballColor.r * contrib;
-              this.palette[(y_offset + x) * 3 + 1] += ballColor.g * contrib;
-              this.palette[(y_offset + x) * 3 + 2] += ballColor.b * contrib;
-            }
-          }
-        }
-      }
-    };
-
-    this.addPlaneX = function (strength, subtract) {
-      // cache attribute lookups
-      const size = this.size,
-            yd = this.yd,
-            zd = this.zd,
-            field = this.field;
-      let x,
-          y,
-          z,
-          xx,
-          val,
-          xdiv,
-          cxy,
-          dist = size * Math.sqrt(strength / subtract);
-      if (dist > size) dist = size;
-
-      for (x = 0; x < dist; x++) {
-        xdiv = x / size;
-        xx = xdiv * xdiv;
-        val = strength / (0.0001 + xx) - subtract;
-
-        if (val > 0.0) {
-          for (y = 0; y < size; y++) {
-            cxy = x + y * yd;
-
-            for (z = 0; z < size; z++) {
-              field[zd * z + cxy] += val;
-            }
-          }
-        }
-      }
-    };
-
-    this.addPlaneY = function (strength, subtract) {
-      // cache attribute lookups
-      const size = this.size,
-            yd = this.yd,
-            zd = this.zd,
-            field = this.field;
-      let x,
-          y,
-          z,
-          yy,
-          val,
-          ydiv,
-          cy,
-          cxy,
-          dist = size * Math.sqrt(strength / subtract);
-      if (dist > size) dist = size;
-
-      for (y = 0; y < dist; y++) {
-        ydiv = y / size;
-        yy = ydiv * ydiv;
-        val = strength / (0.0001 + yy) - subtract;
-
-        if (val > 0.0) {
-          cy = y * yd;
-
-          for (x = 0; x < size; x++) {
-            cxy = cy + x;
-
-            for (z = 0; z < size; z++) field[zd * z + cxy] += val;
-          }
-        }
-      }
-    };
-
-    this.addPlaneZ = function (strength, subtract) {
-      // cache attribute lookups
-      const size = this.size,
-            yd = this.yd,
-            zd = this.zd,
-            field = this.field;
-      let x,
-          y,
-          z,
-          zz,
-          val,
-          zdiv,
-          cz,
-          cyz,
-          dist = size * Math.sqrt(strength / subtract);
-      if (dist > size) dist = size;
-
-      for (z = 0; z < dist; z++) {
-        zdiv = z / size;
-        zz = zdiv * zdiv;
-        val = strength / (0.0001 + zz) - subtract;
-
-        if (val > 0.0) {
-          cz = zd * z;
-
-          for (y = 0; y < size; y++) {
-            cyz = cz + y * yd;
-
-            for (x = 0; x < size; x++) field[cyz + x] += val;
-          }
-        }
-      }
-    }; /////////////////////////////////////
-    // Updates
-    /////////////////////////////////////
-
-
-    this.setCell = function (x, y, z, value) {
-      const index = this.size2 * z + this.size * y + x;
-      this.field[index] = value;
-    };
-
-    this.getCell = function (x, y, z) {
-      const index = this.size2 * z + this.size * y + x;
-      return this.field[index];
-    };
-
-    this.blur = function (intensity = 1) {
-      const field = this.field;
-      const fieldCopy = field.slice();
-      const size = this.size;
-      const size2 = this.size2;
-
-      for (let x = 0; x < size; x++) {
-        for (let y = 0; y < size; y++) {
-          for (let z = 0; z < size; z++) {
-            const index = size2 * z + size * y + x;
-            let val = fieldCopy[index];
-            let count = 1;
-
-            for (let x2 = -1; x2 <= 1; x2 += 2) {
-              const x3 = x2 + x;
-              if (x3 < 0 || x3 >= size) continue;
-
-              for (let y2 = -1; y2 <= 1; y2 += 2) {
-                const y3 = y2 + y;
-                if (y3 < 0 || y3 >= size) continue;
-
-                for (let z2 = -1; z2 <= 1; z2 += 2) {
-                  const z3 = z2 + z;
-                  if (z3 < 0 || z3 >= size) continue;
-                  const index2 = size2 * z3 + size * y3 + x3;
-                  const val2 = fieldCopy[index2];
-                  count++;
-                  val += intensity * (val2 - val) / count;
-                }
-              }
-            }
-
-            field[index] = val;
-          }
-        }
-      }
-    };
-
-    this.reset = function () {
-      // wipe the normal cache
-      for (let i = 0; i < this.size3; i++) {
-        this.normal_cache[i * 3] = 0.0;
-        this.field[i] = 0.0;
-        this.palette[i * 3] = this.palette[i * 3 + 1] = this.palette[i * 3 + 2] = 0.0;
-      }
-    };
-
-    this.onBeforeRender = function () {
-      this.count = 0; // Triangulate. Yeah, this is slow.
-
-      const smin2 = this.size - 2;
-
-      for (let z = 1; z < smin2; z++) {
-        const z_offset = this.size2 * z;
-        const fz = (z - this.halfsize) / this.halfsize; //+ 1
-
-        for (let y = 1; y < smin2; y++) {
-          const y_offset = z_offset + this.size * y;
-          const fy = (y - this.halfsize) / this.halfsize; //+ 1
-
-          for (let x = 1; x < smin2; x++) {
-            const fx = (x - this.halfsize) / this.halfsize; //+ 1
-
-            const q = y_offset + x;
-            polygonize(fx, fy, fz, q, this.isolation);
-          }
-        }
-      } // reset unneeded data
-
-
-      for (let i = this.count * 3; i < this.positionArray.length; i++) {
-        this.positionArray[i] = 0.0;
-      } // update geometry data
-
-
-      geometry.getAttribute('position').needsUpdate = true;
-      geometry.getAttribute('normal').needsUpdate = true;
-      if (this.enableUvs) geometry.getAttribute('uv').needsUpdate = true;
-      if (this.enableColors) geometry.getAttribute('color').needsUpdate = true; // safety check
-
-      if (this.count / 3 > maxPolyCount) console.warn('THREE.MarchingCubes: Geometry buffers too small for rendering. Please create an instance with a higher poly count.');
-    };
-
-    this.init(resolution);
-  }
-
-}
-
-exports.MarchingCubes = MarchingCubes;
-MarchingCubes.prototype.isMarchingCubes = true; /////////////////////////////////////
-// Marching cubes lookup tables
-/////////////////////////////////////
-// These tables are straight from Paul Bourke's page:
-// http://paulbourke.net/geometry/polygonise/
-// who in turn got them from Cory Gene Bloyd.
-
-const edgeTable = new Int32Array([0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00, 0x190, 0x99, 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c, 0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90, 0x230, 0x339, 0x33, 0x13a, 0x636, 0x73f, 0x435, 0x53c, 0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30, 0x3a0, 0x2a9, 0x1a3, 0xaa, 0x7a6, 0x6af, 0x5a5, 0x4ac, 0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0, 0x460, 0x569, 0x663, 0x76a, 0x66, 0x16f, 0x265, 0x36c, 0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60, 0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0xff, 0x3f5, 0x2fc, 0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0, 0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x55, 0x15c, 0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950, 0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0xcc, 0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0, 0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc, 0xcc, 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0, 0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c, 0x15c, 0x55, 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650, 0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc, 0x2fc, 0x3f5, 0xff, 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0, 0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c, 0x36c, 0x265, 0x16f, 0x66, 0x76a, 0x663, 0x569, 0x460, 0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac, 0x4ac, 0x5a5, 0x6af, 0x7a6, 0xaa, 0x1a3, 0x2a9, 0x3a0, 0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c, 0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x33, 0x339, 0x230, 0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c, 0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x99, 0x190, 0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c, 0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0]);
-exports.edgeTable = edgeTable;
-const triTable = new Int32Array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 8, 3, 9, 8, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 2, 10, 0, 2, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 8, 3, 2, 10, 8, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 11, 2, 8, 11, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 9, 0, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 11, 2, 1, 9, 11, 9, 8, 11, -1, -1, -1, -1, -1, -1, -1, 3, 10, 1, 11, 10, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 10, 1, 0, 8, 10, 8, 11, 10, -1, -1, -1, -1, -1, -1, -1, 3, 9, 0, 3, 11, 9, 11, 10, 9, -1, -1, -1, -1, -1, -1, -1, 9, 8, 10, 10, 8, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 3, 0, 7, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 1, 9, 4, 7, 1, 7, 3, 1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 4, 7, 3, 0, 4, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1, 9, 2, 10, 9, 0, 2, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, 2, 10, 9, 2, 9, 7, 2, 7, 3, 7, 9, 4, -1, -1, -1, -1, 8, 4, 7, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 4, 7, 11, 2, 4, 2, 0, 4, -1, -1, -1, -1, -1, -1, -1, 9, 0, 1, 8, 4, 7, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, 4, 7, 11, 9, 4, 11, 9, 11, 2, 9, 2, 1, -1, -1, -1, -1, 3, 10, 1, 3, 11, 10, 7, 8, 4, -1, -1, -1, -1, -1, -1, -1, 1, 11, 10, 1, 4, 11, 1, 0, 4, 7, 11, 4, -1, -1, -1, -1, 4, 7, 8, 9, 0, 11, 9, 11, 10, 11, 0, 3, -1, -1, -1, -1, 4, 7, 11, 4, 11, 9, 9, 11, 10, -1, -1, -1, -1, -1, -1, -1, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 5, 4, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 4, 1, 5, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 5, 4, 8, 3, 5, 3, 1, 5, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 0, 8, 1, 2, 10, 4, 9, 5, -1, -1, -1, -1, -1, -1, -1, 5, 2, 10, 5, 4, 2, 4, 0, 2, -1, -1, -1, -1, -1, -1, -1, 2, 10, 5, 3, 2, 5, 3, 5, 4, 3, 4, 8, -1, -1, -1, -1, 9, 5, 4, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 11, 2, 0, 8, 11, 4, 9, 5, -1, -1, -1, -1, -1, -1, -1, 0, 5, 4, 0, 1, 5, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, 2, 1, 5, 2, 5, 8, 2, 8, 11, 4, 8, 5, -1, -1, -1, -1, 10, 3, 11, 10, 1, 3, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1, 4, 9, 5, 0, 8, 1, 8, 10, 1, 8, 11, 10, -1, -1, -1, -1, 5, 4, 0, 5, 0, 11, 5, 11, 10, 11, 0, 3, -1, -1, -1, -1, 5, 4, 8, 5, 8, 10, 10, 8, 11, -1, -1, -1, -1, -1, -1, -1, 9, 7, 8, 5, 7, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 3, 0, 9, 5, 3, 5, 7, 3, -1, -1, -1, -1, -1, -1, -1, 0, 7, 8, 0, 1, 7, 1, 5, 7, -1, -1, -1, -1, -1, -1, -1, 1, 5, 3, 3, 5, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 7, 8, 9, 5, 7, 10, 1, 2, -1, -1, -1, -1, -1, -1, -1, 10, 1, 2, 9, 5, 0, 5, 3, 0, 5, 7, 3, -1, -1, -1, -1, 8, 0, 2, 8, 2, 5, 8, 5, 7, 10, 5, 2, -1, -1, -1, -1, 2, 10, 5, 2, 5, 3, 3, 5, 7, -1, -1, -1, -1, -1, -1, -1, 7, 9, 5, 7, 8, 9, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1, 9, 5, 7, 9, 7, 2, 9, 2, 0, 2, 7, 11, -1, -1, -1, -1, 2, 3, 11, 0, 1, 8, 1, 7, 8, 1, 5, 7, -1, -1, -1, -1, 11, 2, 1, 11, 1, 7, 7, 1, 5, -1, -1, -1, -1, -1, -1, -1, 9, 5, 8, 8, 5, 7, 10, 1, 3, 10, 3, 11, -1, -1, -1, -1, 5, 7, 0, 5, 0, 9, 7, 11, 0, 1, 0, 10, 11, 10, 0, -1, 11, 10, 0, 11, 0, 3, 10, 5, 0, 8, 0, 7, 5, 7, 0, -1, 11, 10, 5, 7, 11, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 0, 1, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 8, 3, 1, 9, 8, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, 1, 6, 5, 2, 6, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 6, 5, 1, 2, 6, 3, 0, 8, -1, -1, -1, -1, -1, -1, -1, 9, 6, 5, 9, 0, 6, 0, 2, 6, -1, -1, -1, -1, -1, -1, -1, 5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8, -1, -1, -1, -1, 2, 3, 11, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 0, 8, 11, 2, 0, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, 2, 3, 11, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, 5, 10, 6, 1, 9, 2, 9, 11, 2, 9, 8, 11, -1, -1, -1, -1, 6, 3, 11, 6, 5, 3, 5, 1, 3, -1, -1, -1, -1, -1, -1, -1, 0, 8, 11, 0, 11, 5, 0, 5, 1, 5, 11, 6, -1, -1, -1, -1, 3, 11, 6, 0, 3, 6, 0, 6, 5, 0, 5, 9, -1, -1, -1, -1, 6, 5, 9, 6, 9, 11, 11, 9, 8, -1, -1, -1, -1, -1, -1, -1, 5, 10, 6, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 3, 0, 4, 7, 3, 6, 5, 10, -1, -1, -1, -1, -1, -1, -1, 1, 9, 0, 5, 10, 6, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, 10, 6, 5, 1, 9, 7, 1, 7, 3, 7, 9, 4, -1, -1, -1, -1, 6, 1, 2, 6, 5, 1, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1, 1, 2, 5, 5, 2, 6, 3, 0, 4, 3, 4, 7, -1, -1, -1, -1, 8, 4, 7, 9, 0, 5, 0, 6, 5, 0, 2, 6, -1, -1, -1, -1, 7, 3, 9, 7, 9, 4, 3, 2, 9, 5, 9, 6, 2, 6, 9, -1, 3, 11, 2, 7, 8, 4, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, 5, 10, 6, 4, 7, 2, 4, 2, 0, 2, 7, 11, -1, -1, -1, -1, 0, 1, 9, 4, 7, 8, 2, 3, 11, 5, 10, 6, -1, -1, -1, -1, 9, 2, 1, 9, 11, 2, 9, 4, 11, 7, 11, 4, 5, 10, 6, -1, 8, 4, 7, 3, 11, 5, 3, 5, 1, 5, 11, 6, -1, -1, -1, -1, 5, 1, 11, 5, 11, 6, 1, 0, 11, 7, 11, 4, 0, 4, 11, -1, 0, 5, 9, 0, 6, 5, 0, 3, 6, 11, 6, 3, 8, 4, 7, -1, 6, 5, 9, 6, 9, 11, 4, 7, 9, 7, 11, 9, -1, -1, -1, -1, 10, 4, 9, 6, 4, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 10, 6, 4, 9, 10, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, 10, 0, 1, 10, 6, 0, 6, 4, 0, -1, -1, -1, -1, -1, -1, -1, 8, 3, 1, 8, 1, 6, 8, 6, 4, 6, 1, 10, -1, -1, -1, -1, 1, 4, 9, 1, 2, 4, 2, 6, 4, -1, -1, -1, -1, -1, -1, -1, 3, 0, 8, 1, 2, 9, 2, 4, 9, 2, 6, 4, -1, -1, -1, -1, 0, 2, 4, 4, 2, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 3, 2, 8, 2, 4, 4, 2, 6, -1, -1, -1, -1, -1, -1, -1, 10, 4, 9, 10, 6, 4, 11, 2, 3, -1, -1, -1, -1, -1, -1, -1, 0, 8, 2, 2, 8, 11, 4, 9, 10, 4, 10, 6, -1, -1, -1, -1, 3, 11, 2, 0, 1, 6, 0, 6, 4, 6, 1, 10, -1, -1, -1, -1, 6, 4, 1, 6, 1, 10, 4, 8, 1, 2, 1, 11, 8, 11, 1, -1, 9, 6, 4, 9, 3, 6, 9, 1, 3, 11, 6, 3, -1, -1, -1, -1, 8, 11, 1, 8, 1, 0, 11, 6, 1, 9, 1, 4, 6, 4, 1, -1, 3, 11, 6, 3, 6, 0, 0, 6, 4, -1, -1, -1, -1, -1, -1, -1, 6, 4, 8, 11, 6, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 10, 6, 7, 8, 10, 8, 9, 10, -1, -1, -1, -1, -1, -1, -1, 0, 7, 3, 0, 10, 7, 0, 9, 10, 6, 7, 10, -1, -1, -1, -1, 10, 6, 7, 1, 10, 7, 1, 7, 8, 1, 8, 0, -1, -1, -1, -1, 10, 6, 7, 10, 7, 1, 1, 7, 3, -1, -1, -1, -1, -1, -1, -1, 1, 2, 6, 1, 6, 8, 1, 8, 9, 8, 6, 7, -1, -1, -1, -1, 2, 6, 9, 2, 9, 1, 6, 7, 9, 0, 9, 3, 7, 3, 9, -1, 7, 8, 0, 7, 0, 6, 6, 0, 2, -1, -1, -1, -1, -1, -1, -1, 7, 3, 2, 6, 7, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, 11, 10, 6, 8, 10, 8, 9, 8, 6, 7, -1, -1, -1, -1, 2, 0, 7, 2, 7, 11, 0, 9, 7, 6, 7, 10, 9, 10, 7, -1, 1, 8, 0, 1, 7, 8, 1, 10, 7, 6, 7, 10, 2, 3, 11, -1, 11, 2, 1, 11, 1, 7, 10, 6, 1, 6, 7, 1, -1, -1, -1, -1, 8, 9, 6, 8, 6, 7, 9, 1, 6, 11, 6, 3, 1, 3, 6, -1, 0, 9, 1, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 8, 0, 7, 0, 6, 3, 11, 0, 11, 6, 0, -1, -1, -1, -1, 7, 11, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 0, 8, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 1, 9, 8, 3, 1, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, 10, 1, 2, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 3, 0, 8, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1, 2, 9, 0, 2, 10, 9, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1, 6, 11, 7, 2, 10, 3, 10, 8, 3, 10, 9, 8, -1, -1, -1, -1, 7, 2, 3, 6, 2, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 0, 8, 7, 6, 0, 6, 2, 0, -1, -1, -1, -1, -1, -1, -1, 2, 7, 6, 2, 3, 7, 0, 1, 9, -1, -1, -1, -1, -1, -1, -1, 1, 6, 2, 1, 8, 6, 1, 9, 8, 8, 7, 6, -1, -1, -1, -1, 10, 7, 6, 10, 1, 7, 1, 3, 7, -1, -1, -1, -1, -1, -1, -1, 10, 7, 6, 1, 7, 10, 1, 8, 7, 1, 0, 8, -1, -1, -1, -1, 0, 3, 7, 0, 7, 10, 0, 10, 9, 6, 10, 7, -1, -1, -1, -1, 7, 6, 10, 7, 10, 8, 8, 10, 9, -1, -1, -1, -1, -1, -1, -1, 6, 8, 4, 11, 8, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 6, 11, 3, 0, 6, 0, 4, 6, -1, -1, -1, -1, -1, -1, -1, 8, 6, 11, 8, 4, 6, 9, 0, 1, -1, -1, -1, -1, -1, -1, -1, 9, 4, 6, 9, 6, 3, 9, 3, 1, 11, 3, 6, -1, -1, -1, -1, 6, 8, 4, 6, 11, 8, 2, 10, 1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 3, 0, 11, 0, 6, 11, 0, 4, 6, -1, -1, -1, -1, 4, 11, 8, 4, 6, 11, 0, 2, 9, 2, 10, 9, -1, -1, -1, -1, 10, 9, 3, 10, 3, 2, 9, 4, 3, 11, 3, 6, 4, 6, 3, -1, 8, 2, 3, 8, 4, 2, 4, 6, 2, -1, -1, -1, -1, -1, -1, -1, 0, 4, 2, 4, 6, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 9, 0, 2, 3, 4, 2, 4, 6, 4, 3, 8, -1, -1, -1, -1, 1, 9, 4, 1, 4, 2, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, 8, 1, 3, 8, 6, 1, 8, 4, 6, 6, 10, 1, -1, -1, -1, -1, 10, 1, 0, 10, 0, 6, 6, 0, 4, -1, -1, -1, -1, -1, -1, -1, 4, 6, 3, 4, 3, 8, 6, 10, 3, 0, 3, 9, 10, 9, 3, -1, 10, 9, 4, 6, 10, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 9, 5, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 4, 9, 5, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, 5, 0, 1, 5, 4, 0, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, 11, 7, 6, 8, 3, 4, 3, 5, 4, 3, 1, 5, -1, -1, -1, -1, 9, 5, 4, 10, 1, 2, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, 6, 11, 7, 1, 2, 10, 0, 8, 3, 4, 9, 5, -1, -1, -1, -1, 7, 6, 11, 5, 4, 10, 4, 2, 10, 4, 0, 2, -1, -1, -1, -1, 3, 4, 8, 3, 5, 4, 3, 2, 5, 10, 5, 2, 11, 7, 6, -1, 7, 2, 3, 7, 6, 2, 5, 4, 9, -1, -1, -1, -1, -1, -1, -1, 9, 5, 4, 0, 8, 6, 0, 6, 2, 6, 8, 7, -1, -1, -1, -1, 3, 6, 2, 3, 7, 6, 1, 5, 0, 5, 4, 0, -1, -1, -1, -1, 6, 2, 8, 6, 8, 7, 2, 1, 8, 4, 8, 5, 1, 5, 8, -1, 9, 5, 4, 10, 1, 6, 1, 7, 6, 1, 3, 7, -1, -1, -1, -1, 1, 6, 10, 1, 7, 6, 1, 0, 7, 8, 7, 0, 9, 5, 4, -1, 4, 0, 10, 4, 10, 5, 0, 3, 10, 6, 10, 7, 3, 7, 10, -1, 7, 6, 10, 7, 10, 8, 5, 4, 10, 4, 8, 10, -1, -1, -1, -1, 6, 9, 5, 6, 11, 9, 11, 8, 9, -1, -1, -1, -1, -1, -1, -1, 3, 6, 11, 0, 6, 3, 0, 5, 6, 0, 9, 5, -1, -1, -1, -1, 0, 11, 8, 0, 5, 11, 0, 1, 5, 5, 6, 11, -1, -1, -1, -1, 6, 11, 3, 6, 3, 5, 5, 3, 1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 9, 5, 11, 9, 11, 8, 11, 5, 6, -1, -1, -1, -1, 0, 11, 3, 0, 6, 11, 0, 9, 6, 5, 6, 9, 1, 2, 10, -1, 11, 8, 5, 11, 5, 6, 8, 0, 5, 10, 5, 2, 0, 2, 5, -1, 6, 11, 3, 6, 3, 5, 2, 10, 3, 10, 5, 3, -1, -1, -1, -1, 5, 8, 9, 5, 2, 8, 5, 6, 2, 3, 8, 2, -1, -1, -1, -1, 9, 5, 6, 9, 6, 0, 0, 6, 2, -1, -1, -1, -1, -1, -1, -1, 1, 5, 8, 1, 8, 0, 5, 6, 8, 3, 8, 2, 6, 2, 8, -1, 1, 5, 6, 2, 1, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 3, 6, 1, 6, 10, 3, 8, 6, 5, 6, 9, 8, 9, 6, -1, 10, 1, 0, 10, 0, 6, 9, 5, 0, 5, 6, 0, -1, -1, -1, -1, 0, 3, 8, 5, 6, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 5, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 5, 10, 7, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 5, 10, 11, 7, 5, 8, 3, 0, -1, -1, -1, -1, -1, -1, -1, 5, 11, 7, 5, 10, 11, 1, 9, 0, -1, -1, -1, -1, -1, -1, -1, 10, 7, 5, 10, 11, 7, 9, 8, 1, 8, 3, 1, -1, -1, -1, -1, 11, 1, 2, 11, 7, 1, 7, 5, 1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 1, 2, 7, 1, 7, 5, 7, 2, 11, -1, -1, -1, -1, 9, 7, 5, 9, 2, 7, 9, 0, 2, 2, 11, 7, -1, -1, -1, -1, 7, 5, 2, 7, 2, 11, 5, 9, 2, 3, 2, 8, 9, 8, 2, -1, 2, 5, 10, 2, 3, 5, 3, 7, 5, -1, -1, -1, -1, -1, -1, -1, 8, 2, 0, 8, 5, 2, 8, 7, 5, 10, 2, 5, -1, -1, -1, -1, 9, 0, 1, 5, 10, 3, 5, 3, 7, 3, 10, 2, -1, -1, -1, -1, 9, 8, 2, 9, 2, 1, 8, 7, 2, 10, 2, 5, 7, 5, 2, -1, 1, 3, 5, 3, 7, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 7, 0, 7, 1, 1, 7, 5, -1, -1, -1, -1, -1, -1, -1, 9, 0, 3, 9, 3, 5, 5, 3, 7, -1, -1, -1, -1, -1, -1, -1, 9, 8, 7, 5, 9, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 5, 8, 4, 5, 10, 8, 10, 11, 8, -1, -1, -1, -1, -1, -1, -1, 5, 0, 4, 5, 11, 0, 5, 10, 11, 11, 3, 0, -1, -1, -1, -1, 0, 1, 9, 8, 4, 10, 8, 10, 11, 10, 4, 5, -1, -1, -1, -1, 10, 11, 4, 10, 4, 5, 11, 3, 4, 9, 4, 1, 3, 1, 4, -1, 2, 5, 1, 2, 8, 5, 2, 11, 8, 4, 5, 8, -1, -1, -1, -1, 0, 4, 11, 0, 11, 3, 4, 5, 11, 2, 11, 1, 5, 1, 11, -1, 0, 2, 5, 0, 5, 9, 2, 11, 5, 4, 5, 8, 11, 8, 5, -1, 9, 4, 5, 2, 11, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 5, 10, 3, 5, 2, 3, 4, 5, 3, 8, 4, -1, -1, -1, -1, 5, 10, 2, 5, 2, 4, 4, 2, 0, -1, -1, -1, -1, -1, -1, -1, 3, 10, 2, 3, 5, 10, 3, 8, 5, 4, 5, 8, 0, 1, 9, -1, 5, 10, 2, 5, 2, 4, 1, 9, 2, 9, 4, 2, -1, -1, -1, -1, 8, 4, 5, 8, 5, 3, 3, 5, 1, -1, -1, -1, -1, -1, -1, -1, 0, 4, 5, 1, 0, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 4, 5, 8, 5, 3, 9, 0, 5, 0, 3, 5, -1, -1, -1, -1, 9, 4, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 11, 7, 4, 9, 11, 9, 10, 11, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 4, 9, 7, 9, 11, 7, 9, 10, 11, -1, -1, -1, -1, 1, 10, 11, 1, 11, 4, 1, 4, 0, 7, 4, 11, -1, -1, -1, -1, 3, 1, 4, 3, 4, 8, 1, 10, 4, 7, 4, 11, 10, 11, 4, -1, 4, 11, 7, 9, 11, 4, 9, 2, 11, 9, 1, 2, -1, -1, -1, -1, 9, 7, 4, 9, 11, 7, 9, 1, 11, 2, 11, 1, 0, 8, 3, -1, 11, 7, 4, 11, 4, 2, 2, 4, 0, -1, -1, -1, -1, -1, -1, -1, 11, 7, 4, 11, 4, 2, 8, 3, 4, 3, 2, 4, -1, -1, -1, -1, 2, 9, 10, 2, 7, 9, 2, 3, 7, 7, 4, 9, -1, -1, -1, -1, 9, 10, 7, 9, 7, 4, 10, 2, 7, 8, 7, 0, 2, 0, 7, -1, 3, 7, 10, 3, 10, 2, 7, 4, 10, 1, 10, 0, 4, 0, 10, -1, 1, 10, 2, 8, 7, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 9, 1, 4, 1, 7, 7, 1, 3, -1, -1, -1, -1, -1, -1, -1, 4, 9, 1, 4, 1, 7, 0, 8, 1, 8, 7, 1, -1, -1, -1, -1, 4, 0, 3, 7, 4, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 8, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 10, 8, 10, 11, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 0, 9, 3, 9, 11, 11, 9, 10, -1, -1, -1, -1, -1, -1, -1, 0, 1, 10, 0, 10, 8, 8, 10, 11, -1, -1, -1, -1, -1, -1, -1, 3, 1, 10, 11, 3, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 11, 1, 11, 9, 9, 11, 8, -1, -1, -1, -1, -1, -1, -1, 3, 0, 9, 3, 9, 11, 1, 2, 9, 2, 11, 9, -1, -1, -1, -1, 0, 2, 11, 8, 0, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 2, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, 8, 2, 8, 10, 10, 8, 9, -1, -1, -1, -1, -1, -1, -1, 9, 10, 2, 0, 9, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, 8, 2, 8, 10, 0, 1, 8, 1, 10, 8, -1, -1, -1, -1, 1, 10, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 3, 8, 9, 1, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]);
-exports.triTable = triTable;
-},{"three":"../node_modules/three/build/three.module.js"}],"../node_modules/lil-gui/dist/lil-gui.esm.js":[function(require,module,exports) {
-"use strict";
-||||||| 8622421
-exports.MapControls = MapControls;
-},{"three":"../node_modules/three/build/three.module.js"}],"../node_modules/lil-gui/dist/lil-gui.esm.js":[function(require,module,exports) {
-"use strict";
-=======
->>>>>>> master
 
 exports._sortPropTweensByPriority = _sortPropTweensByPriority;
 exports._renderComplexString = _renderComplexString;
@@ -50990,6 +53345,620 @@ function toTrianglesDrawMode(geometry, drawMode) {
   newGeometry.setIndex(newIndices);
   return newGeometry;
 }
+},{"three":"../node_modules/three/build/three.module.js"}],"../node_modules/three/examples/jsm/objects/MarchingCubes.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.triTable = exports.edgeTable = exports.MarchingCubes = void 0;
+
+var _three = require("three");
+
+/**
+ * Port of http://webglsamples.org/blob/blob.html
+ */
+class MarchingCubes extends _three.Mesh {
+  constructor(resolution, material, enableUvs = false, enableColors = false, maxPolyCount = 10000) {
+    const geometry = new _three.BufferGeometry();
+    super(geometry, material);
+    const scope = this; // temp buffers used in polygonize
+
+    const vlist = new Float32Array(12 * 3);
+    const nlist = new Float32Array(12 * 3);
+    const clist = new Float32Array(12 * 3);
+    this.enableUvs = enableUvs;
+    this.enableColors = enableColors; // functions have to be object properties
+    // prototype functions kill performance
+    // (tested and it was 4x slower !!!)
+
+    this.init = function (resolution) {
+      this.resolution = resolution; // parameters
+
+      this.isolation = 80.0; // size of field, 32 is pushing it in Javascript :)
+
+      this.size = resolution;
+      this.size2 = this.size * this.size;
+      this.size3 = this.size2 * this.size;
+      this.halfsize = this.size / 2.0; // deltas
+
+      this.delta = 2.0 / this.size;
+      this.yd = this.size;
+      this.zd = this.size2;
+      this.field = new Float32Array(this.size3);
+      this.normal_cache = new Float32Array(this.size3 * 3);
+      this.palette = new Float32Array(this.size3 * 3); //
+
+      this.count = 0;
+      const maxVertexCount = maxPolyCount * 3;
+      this.positionArray = new Float32Array(maxVertexCount * 3);
+      const positionAttribute = new _three.BufferAttribute(this.positionArray, 3);
+      positionAttribute.setUsage(_three.DynamicDrawUsage);
+      geometry.setAttribute('position', positionAttribute);
+      this.normalArray = new Float32Array(maxVertexCount * 3);
+      const normalAttribute = new _three.BufferAttribute(this.normalArray, 3);
+      normalAttribute.setUsage(_three.DynamicDrawUsage);
+      geometry.setAttribute('normal', normalAttribute);
+
+      if (this.enableUvs) {
+        this.uvArray = new Float32Array(maxVertexCount * 2);
+        const uvAttribute = new _three.BufferAttribute(this.uvArray, 2);
+        uvAttribute.setUsage(_three.DynamicDrawUsage);
+        geometry.setAttribute('uv', uvAttribute);
+      }
+
+      if (this.enableColors) {
+        this.colorArray = new Float32Array(maxVertexCount * 3);
+        const colorAttribute = new _three.BufferAttribute(this.colorArray, 3);
+        colorAttribute.setUsage(_three.DynamicDrawUsage);
+        geometry.setAttribute('color', colorAttribute);
+      }
+    }; ///////////////////////
+    // Polygonization
+    ///////////////////////
+
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function VIntX(q, offset, isol, x, y, z, valp1, valp2, c_offset1, c_offset2) {
+      const mu = (isol - valp1) / (valp2 - valp1),
+            nc = scope.normal_cache;
+      vlist[offset + 0] = x + mu * scope.delta;
+      vlist[offset + 1] = y;
+      vlist[offset + 2] = z;
+      nlist[offset + 0] = lerp(nc[q + 0], nc[q + 3], mu);
+      nlist[offset + 1] = lerp(nc[q + 1], nc[q + 4], mu);
+      nlist[offset + 2] = lerp(nc[q + 2], nc[q + 5], mu);
+      clist[offset + 0] = lerp(scope.palette[c_offset1 * 3 + 0], scope.palette[c_offset2 * 3 + 0], mu);
+      clist[offset + 1] = lerp(scope.palette[c_offset1 * 3 + 1], scope.palette[c_offset2 * 3 + 1], mu);
+      clist[offset + 2] = lerp(scope.palette[c_offset1 * 3 + 2], scope.palette[c_offset2 * 3 + 2], mu);
+    }
+
+    function VIntY(q, offset, isol, x, y, z, valp1, valp2, c_offset1, c_offset2) {
+      const mu = (isol - valp1) / (valp2 - valp1),
+            nc = scope.normal_cache;
+      vlist[offset + 0] = x;
+      vlist[offset + 1] = y + mu * scope.delta;
+      vlist[offset + 2] = z;
+      const q2 = q + scope.yd * 3;
+      nlist[offset + 0] = lerp(nc[q + 0], nc[q2 + 0], mu);
+      nlist[offset + 1] = lerp(nc[q + 1], nc[q2 + 1], mu);
+      nlist[offset + 2] = lerp(nc[q + 2], nc[q2 + 2], mu);
+      clist[offset + 0] = lerp(scope.palette[c_offset1 * 3 + 0], scope.palette[c_offset2 * 3 + 0], mu);
+      clist[offset + 1] = lerp(scope.palette[c_offset1 * 3 + 1], scope.palette[c_offset2 * 3 + 1], mu);
+      clist[offset + 2] = lerp(scope.palette[c_offset1 * 3 + 2], scope.palette[c_offset2 * 3 + 2], mu);
+    }
+
+    function VIntZ(q, offset, isol, x, y, z, valp1, valp2, c_offset1, c_offset2) {
+      const mu = (isol - valp1) / (valp2 - valp1),
+            nc = scope.normal_cache;
+      vlist[offset + 0] = x;
+      vlist[offset + 1] = y;
+      vlist[offset + 2] = z + mu * scope.delta;
+      const q2 = q + scope.zd * 3;
+      nlist[offset + 0] = lerp(nc[q + 0], nc[q2 + 0], mu);
+      nlist[offset + 1] = lerp(nc[q + 1], nc[q2 + 1], mu);
+      nlist[offset + 2] = lerp(nc[q + 2], nc[q2 + 2], mu);
+      clist[offset + 0] = lerp(scope.palette[c_offset1 * 3 + 0], scope.palette[c_offset2 * 3 + 0], mu);
+      clist[offset + 1] = lerp(scope.palette[c_offset1 * 3 + 1], scope.palette[c_offset2 * 3 + 1], mu);
+      clist[offset + 2] = lerp(scope.palette[c_offset1 * 3 + 2], scope.palette[c_offset2 * 3 + 2], mu);
+    }
+
+    function compNorm(q) {
+      const q3 = q * 3;
+
+      if (scope.normal_cache[q3] === 0.0) {
+        scope.normal_cache[q3 + 0] = scope.field[q - 1] - scope.field[q + 1];
+        scope.normal_cache[q3 + 1] = scope.field[q - scope.yd] - scope.field[q + scope.yd];
+        scope.normal_cache[q3 + 2] = scope.field[q - scope.zd] - scope.field[q + scope.zd];
+      }
+    } // Returns total number of triangles. Fills triangles.
+    // (this is where most of time is spent - it's inner work of O(n3) loop )
+
+
+    function polygonize(fx, fy, fz, q, isol) {
+      // cache indices
+      const q1 = q + 1,
+            qy = q + scope.yd,
+            qz = q + scope.zd,
+            q1y = q1 + scope.yd,
+            q1z = q1 + scope.zd,
+            qyz = q + scope.yd + scope.zd,
+            q1yz = q1 + scope.yd + scope.zd;
+      let cubeindex = 0;
+      const field0 = scope.field[q],
+            field1 = scope.field[q1],
+            field2 = scope.field[qy],
+            field3 = scope.field[q1y],
+            field4 = scope.field[qz],
+            field5 = scope.field[q1z],
+            field6 = scope.field[qyz],
+            field7 = scope.field[q1yz];
+      if (field0 < isol) cubeindex |= 1;
+      if (field1 < isol) cubeindex |= 2;
+      if (field2 < isol) cubeindex |= 8;
+      if (field3 < isol) cubeindex |= 4;
+      if (field4 < isol) cubeindex |= 16;
+      if (field5 < isol) cubeindex |= 32;
+      if (field6 < isol) cubeindex |= 128;
+      if (field7 < isol) cubeindex |= 64; // if cube is entirely in/out of the surface - bail, nothing to draw
+
+      const bits = edgeTable[cubeindex];
+      if (bits === 0) return 0;
+      const d = scope.delta,
+            fx2 = fx + d,
+            fy2 = fy + d,
+            fz2 = fz + d; // top of the cube
+
+      if (bits & 1) {
+        compNorm(q);
+        compNorm(q1);
+        VIntX(q * 3, 0, isol, fx, fy, fz, field0, field1, q, q1);
+      }
+
+      if (bits & 2) {
+        compNorm(q1);
+        compNorm(q1y);
+        VIntY(q1 * 3, 3, isol, fx2, fy, fz, field1, field3, q1, q1y);
+      }
+
+      if (bits & 4) {
+        compNorm(qy);
+        compNorm(q1y);
+        VIntX(qy * 3, 6, isol, fx, fy2, fz, field2, field3, qy, q1y);
+      }
+
+      if (bits & 8) {
+        compNorm(q);
+        compNorm(qy);
+        VIntY(q * 3, 9, isol, fx, fy, fz, field0, field2, q, qy);
+      } // bottom of the cube
+
+
+      if (bits & 16) {
+        compNorm(qz);
+        compNorm(q1z);
+        VIntX(qz * 3, 12, isol, fx, fy, fz2, field4, field5, qz, q1z);
+      }
+
+      if (bits & 32) {
+        compNorm(q1z);
+        compNorm(q1yz);
+        VIntY(q1z * 3, 15, isol, fx2, fy, fz2, field5, field7, q1z, q1yz);
+      }
+
+      if (bits & 64) {
+        compNorm(qyz);
+        compNorm(q1yz);
+        VIntX(qyz * 3, 18, isol, fx, fy2, fz2, field6, field7, qyz, q1yz);
+      }
+
+      if (bits & 128) {
+        compNorm(qz);
+        compNorm(qyz);
+        VIntY(qz * 3, 21, isol, fx, fy, fz2, field4, field6, qz, qyz);
+      } // vertical lines of the cube
+
+
+      if (bits & 256) {
+        compNorm(q);
+        compNorm(qz);
+        VIntZ(q * 3, 24, isol, fx, fy, fz, field0, field4, q, qz);
+      }
+
+      if (bits & 512) {
+        compNorm(q1);
+        compNorm(q1z);
+        VIntZ(q1 * 3, 27, isol, fx2, fy, fz, field1, field5, q1, q1z);
+      }
+
+      if (bits & 1024) {
+        compNorm(q1y);
+        compNorm(q1yz);
+        VIntZ(q1y * 3, 30, isol, fx2, fy2, fz, field3, field7, q1y, q1yz);
+      }
+
+      if (bits & 2048) {
+        compNorm(qy);
+        compNorm(qyz);
+        VIntZ(qy * 3, 33, isol, fx, fy2, fz, field2, field6, qy, qyz);
+      }
+
+      cubeindex <<= 4; // re-purpose cubeindex into an offset into triTable
+
+      let o1,
+          o2,
+          o3,
+          numtris = 0,
+          i = 0; // here is where triangles are created
+
+      while (triTable[cubeindex + i] != -1) {
+        o1 = cubeindex + i;
+        o2 = o1 + 1;
+        o3 = o1 + 2;
+        posnormtriv(vlist, nlist, clist, 3 * triTable[o1], 3 * triTable[o2], 3 * triTable[o3]);
+        i += 3;
+        numtris++;
+      }
+
+      return numtris;
+    }
+
+    function posnormtriv(pos, norm, colors, o1, o2, o3) {
+      const c = scope.count * 3; // positions
+
+      scope.positionArray[c + 0] = pos[o1];
+      scope.positionArray[c + 1] = pos[o1 + 1];
+      scope.positionArray[c + 2] = pos[o1 + 2];
+      scope.positionArray[c + 3] = pos[o2];
+      scope.positionArray[c + 4] = pos[o2 + 1];
+      scope.positionArray[c + 5] = pos[o2 + 2];
+      scope.positionArray[c + 6] = pos[o3];
+      scope.positionArray[c + 7] = pos[o3 + 1];
+      scope.positionArray[c + 8] = pos[o3 + 2]; // normals
+
+      if (scope.material.flatShading === true) {
+        const nx = (norm[o1 + 0] + norm[o2 + 0] + norm[o3 + 0]) / 3;
+        const ny = (norm[o1 + 1] + norm[o2 + 1] + norm[o3 + 1]) / 3;
+        const nz = (norm[o1 + 2] + norm[o2 + 2] + norm[o3 + 2]) / 3;
+        scope.normalArray[c + 0] = nx;
+        scope.normalArray[c + 1] = ny;
+        scope.normalArray[c + 2] = nz;
+        scope.normalArray[c + 3] = nx;
+        scope.normalArray[c + 4] = ny;
+        scope.normalArray[c + 5] = nz;
+        scope.normalArray[c + 6] = nx;
+        scope.normalArray[c + 7] = ny;
+        scope.normalArray[c + 8] = nz;
+      } else {
+        scope.normalArray[c + 0] = norm[o1 + 0];
+        scope.normalArray[c + 1] = norm[o1 + 1];
+        scope.normalArray[c + 2] = norm[o1 + 2];
+        scope.normalArray[c + 3] = norm[o2 + 0];
+        scope.normalArray[c + 4] = norm[o2 + 1];
+        scope.normalArray[c + 5] = norm[o2 + 2];
+        scope.normalArray[c + 6] = norm[o3 + 0];
+        scope.normalArray[c + 7] = norm[o3 + 1];
+        scope.normalArray[c + 8] = norm[o3 + 2];
+      } // uvs
+
+
+      if (scope.enableUvs) {
+        const d = scope.count * 2;
+        scope.uvArray[d + 0] = pos[o1 + 0];
+        scope.uvArray[d + 1] = pos[o1 + 2];
+        scope.uvArray[d + 2] = pos[o2 + 0];
+        scope.uvArray[d + 3] = pos[o2 + 2];
+        scope.uvArray[d + 4] = pos[o3 + 0];
+        scope.uvArray[d + 5] = pos[o3 + 2];
+      } // colors
+
+
+      if (scope.enableColors) {
+        scope.colorArray[c + 0] = colors[o1 + 0];
+        scope.colorArray[c + 1] = colors[o1 + 1];
+        scope.colorArray[c + 2] = colors[o1 + 2];
+        scope.colorArray[c + 3] = colors[o2 + 0];
+        scope.colorArray[c + 4] = colors[o2 + 1];
+        scope.colorArray[c + 5] = colors[o2 + 2];
+        scope.colorArray[c + 6] = colors[o3 + 0];
+        scope.colorArray[c + 7] = colors[o3 + 1];
+        scope.colorArray[c + 8] = colors[o3 + 2];
+      }
+
+      scope.count += 3;
+    } /////////////////////////////////////
+    // Metaballs
+    /////////////////////////////////////
+    // Adds a reciprocal ball (nice and blobby) that, to be fast, fades to zero after
+    // a fixed distance, determined by strength and subtract.
+
+
+    this.addBall = function (ballx, bally, ballz, strength, subtract, colors) {
+      const sign = Math.sign(strength);
+      strength = Math.abs(strength);
+      const userDefineColor = !(colors === undefined || colors === null);
+      let ballColor = new _three.Color(ballx, bally, ballz);
+
+      if (userDefineColor) {
+        try {
+          ballColor = colors instanceof _three.Color ? colors : Array.isArray(colors) ? new _three.Color(Math.min(Math.abs(colors[0]), 1), Math.min(Math.abs(colors[1]), 1), Math.min(Math.abs(colors[2]), 1)) : new _three.Color(colors);
+        } catch (err) {
+          ballColor = new _three.Color(ballx, bally, ballz);
+        }
+      } // Let's solve the equation to find the radius:
+      // 1.0 / (0.000001 + radius^2) * strength - subtract = 0
+      // strength / (radius^2) = subtract
+      // strength = subtract * radius^2
+      // radius^2 = strength / subtract
+      // radius = sqrt(strength / subtract)
+
+
+      const radius = this.size * Math.sqrt(strength / subtract),
+            zs = ballz * this.size,
+            ys = bally * this.size,
+            xs = ballx * this.size;
+      let min_z = Math.floor(zs - radius);
+      if (min_z < 1) min_z = 1;
+      let max_z = Math.floor(zs + radius);
+      if (max_z > this.size - 1) max_z = this.size - 1;
+      let min_y = Math.floor(ys - radius);
+      if (min_y < 1) min_y = 1;
+      let max_y = Math.floor(ys + radius);
+      if (max_y > this.size - 1) max_y = this.size - 1;
+      let min_x = Math.floor(xs - radius);
+      if (min_x < 1) min_x = 1;
+      let max_x = Math.floor(xs + radius);
+      if (max_x > this.size - 1) max_x = this.size - 1; // Don't polygonize in the outer layer because normals aren't
+      // well-defined there.
+
+      let x, y, z, y_offset, z_offset, fx, fy, fz, fz2, fy2, val;
+
+      for (z = min_z; z < max_z; z++) {
+        z_offset = this.size2 * z;
+        fz = z / this.size - ballz;
+        fz2 = fz * fz;
+
+        for (y = min_y; y < max_y; y++) {
+          y_offset = z_offset + this.size * y;
+          fy = y / this.size - bally;
+          fy2 = fy * fy;
+
+          for (x = min_x; x < max_x; x++) {
+            fx = x / this.size - ballx;
+            val = strength / (0.000001 + fx * fx + fy2 + fz2) - subtract;
+
+            if (val > 0.0) {
+              this.field[y_offset + x] += val * sign; // optimization
+              // http://www.geisswerks.com/ryan/BLOBS/blobs.html
+
+              const ratio = Math.sqrt((x - xs) * (x - xs) + (y - ys) * (y - ys) + (z - zs) * (z - zs)) / radius;
+              const contrib = 1 - ratio * ratio * ratio * (ratio * (ratio * 6 - 15) + 10);
+              this.palette[(y_offset + x) * 3 + 0] += ballColor.r * contrib;
+              this.palette[(y_offset + x) * 3 + 1] += ballColor.g * contrib;
+              this.palette[(y_offset + x) * 3 + 2] += ballColor.b * contrib;
+            }
+          }
+        }
+      }
+    };
+
+    this.addPlaneX = function (strength, subtract) {
+      // cache attribute lookups
+      const size = this.size,
+            yd = this.yd,
+            zd = this.zd,
+            field = this.field;
+      let x,
+          y,
+          z,
+          xx,
+          val,
+          xdiv,
+          cxy,
+          dist = size * Math.sqrt(strength / subtract);
+      if (dist > size) dist = size;
+
+      for (x = 0; x < dist; x++) {
+        xdiv = x / size;
+        xx = xdiv * xdiv;
+        val = strength / (0.0001 + xx) - subtract;
+
+        if (val > 0.0) {
+          for (y = 0; y < size; y++) {
+            cxy = x + y * yd;
+
+            for (z = 0; z < size; z++) {
+              field[zd * z + cxy] += val;
+            }
+          }
+        }
+      }
+    };
+
+    this.addPlaneY = function (strength, subtract) {
+      // cache attribute lookups
+      const size = this.size,
+            yd = this.yd,
+            zd = this.zd,
+            field = this.field;
+      let x,
+          y,
+          z,
+          yy,
+          val,
+          ydiv,
+          cy,
+          cxy,
+          dist = size * Math.sqrt(strength / subtract);
+      if (dist > size) dist = size;
+
+      for (y = 0; y < dist; y++) {
+        ydiv = y / size;
+        yy = ydiv * ydiv;
+        val = strength / (0.0001 + yy) - subtract;
+
+        if (val > 0.0) {
+          cy = y * yd;
+
+          for (x = 0; x < size; x++) {
+            cxy = cy + x;
+
+            for (z = 0; z < size; z++) field[zd * z + cxy] += val;
+          }
+        }
+      }
+    };
+
+    this.addPlaneZ = function (strength, subtract) {
+      // cache attribute lookups
+      const size = this.size,
+            yd = this.yd,
+            zd = this.zd,
+            field = this.field;
+      let x,
+          y,
+          z,
+          zz,
+          val,
+          zdiv,
+          cz,
+          cyz,
+          dist = size * Math.sqrt(strength / subtract);
+      if (dist > size) dist = size;
+
+      for (z = 0; z < dist; z++) {
+        zdiv = z / size;
+        zz = zdiv * zdiv;
+        val = strength / (0.0001 + zz) - subtract;
+
+        if (val > 0.0) {
+          cz = zd * z;
+
+          for (y = 0; y < size; y++) {
+            cyz = cz + y * yd;
+
+            for (x = 0; x < size; x++) field[cyz + x] += val;
+          }
+        }
+      }
+    }; /////////////////////////////////////
+    // Updates
+    /////////////////////////////////////
+
+
+    this.setCell = function (x, y, z, value) {
+      const index = this.size2 * z + this.size * y + x;
+      this.field[index] = value;
+    };
+
+    this.getCell = function (x, y, z) {
+      const index = this.size2 * z + this.size * y + x;
+      return this.field[index];
+    };
+
+    this.blur = function (intensity = 1) {
+      const field = this.field;
+      const fieldCopy = field.slice();
+      const size = this.size;
+      const size2 = this.size2;
+
+      for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+          for (let z = 0; z < size; z++) {
+            const index = size2 * z + size * y + x;
+            let val = fieldCopy[index];
+            let count = 1;
+
+            for (let x2 = -1; x2 <= 1; x2 += 2) {
+              const x3 = x2 + x;
+              if (x3 < 0 || x3 >= size) continue;
+
+              for (let y2 = -1; y2 <= 1; y2 += 2) {
+                const y3 = y2 + y;
+                if (y3 < 0 || y3 >= size) continue;
+
+                for (let z2 = -1; z2 <= 1; z2 += 2) {
+                  const z3 = z2 + z;
+                  if (z3 < 0 || z3 >= size) continue;
+                  const index2 = size2 * z3 + size * y3 + x3;
+                  const val2 = fieldCopy[index2];
+                  count++;
+                  val += intensity * (val2 - val) / count;
+                }
+              }
+            }
+
+            field[index] = val;
+          }
+        }
+      }
+    };
+
+    this.reset = function () {
+      // wipe the normal cache
+      for (let i = 0; i < this.size3; i++) {
+        this.normal_cache[i * 3] = 0.0;
+        this.field[i] = 0.0;
+        this.palette[i * 3] = this.palette[i * 3 + 1] = this.palette[i * 3 + 2] = 0.0;
+      }
+    };
+
+    this.onBeforeRender = function () {
+      this.count = 0; // Triangulate. Yeah, this is slow.
+
+      const smin2 = this.size - 2;
+
+      for (let z = 1; z < smin2; z++) {
+        const z_offset = this.size2 * z;
+        const fz = (z - this.halfsize) / this.halfsize; //+ 1
+
+        for (let y = 1; y < smin2; y++) {
+          const y_offset = z_offset + this.size * y;
+          const fy = (y - this.halfsize) / this.halfsize; //+ 1
+
+          for (let x = 1; x < smin2; x++) {
+            const fx = (x - this.halfsize) / this.halfsize; //+ 1
+
+            const q = y_offset + x;
+            polygonize(fx, fy, fz, q, this.isolation);
+          }
+        }
+      } // reset unneeded data
+
+
+      for (let i = this.count * 3; i < this.positionArray.length; i++) {
+        this.positionArray[i] = 0.0;
+      } // update geometry data
+
+
+      geometry.getAttribute('position').needsUpdate = true;
+      geometry.getAttribute('normal').needsUpdate = true;
+      if (this.enableUvs) geometry.getAttribute('uv').needsUpdate = true;
+      if (this.enableColors) geometry.getAttribute('color').needsUpdate = true; // safety check
+
+      if (this.count / 3 > maxPolyCount) console.warn('THREE.MarchingCubes: Geometry buffers too small for rendering. Please create an instance with a higher poly count.');
+    };
+
+    this.init(resolution);
+  }
+
+}
+
+exports.MarchingCubes = MarchingCubes;
+MarchingCubes.prototype.isMarchingCubes = true; /////////////////////////////////////
+// Marching cubes lookup tables
+/////////////////////////////////////
+// These tables are straight from Paul Bourke's page:
+// http://paulbourke.net/geometry/polygonise/
+// who in turn got them from Cory Gene Bloyd.
+
+const edgeTable = new Int32Array([0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00, 0x190, 0x99, 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c, 0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90, 0x230, 0x339, 0x33, 0x13a, 0x636, 0x73f, 0x435, 0x53c, 0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30, 0x3a0, 0x2a9, 0x1a3, 0xaa, 0x7a6, 0x6af, 0x5a5, 0x4ac, 0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0, 0x460, 0x569, 0x663, 0x76a, 0x66, 0x16f, 0x265, 0x36c, 0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60, 0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0xff, 0x3f5, 0x2fc, 0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0, 0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x55, 0x15c, 0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950, 0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0xcc, 0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0, 0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc, 0xcc, 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0, 0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c, 0x15c, 0x55, 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650, 0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc, 0x2fc, 0x3f5, 0xff, 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0, 0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c, 0x36c, 0x265, 0x16f, 0x66, 0x76a, 0x663, 0x569, 0x460, 0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac, 0x4ac, 0x5a5, 0x6af, 0x7a6, 0xaa, 0x1a3, 0x2a9, 0x3a0, 0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c, 0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x33, 0x339, 0x230, 0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c, 0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x99, 0x190, 0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c, 0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0]);
+exports.edgeTable = edgeTable;
+const triTable = new Int32Array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 8, 3, 9, 8, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 2, 10, 0, 2, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 8, 3, 2, 10, 8, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 11, 2, 8, 11, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 9, 0, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 11, 2, 1, 9, 11, 9, 8, 11, -1, -1, -1, -1, -1, -1, -1, 3, 10, 1, 11, 10, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 10, 1, 0, 8, 10, 8, 11, 10, -1, -1, -1, -1, -1, -1, -1, 3, 9, 0, 3, 11, 9, 11, 10, 9, -1, -1, -1, -1, -1, -1, -1, 9, 8, 10, 10, 8, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 3, 0, 7, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 1, 9, 4, 7, 1, 7, 3, 1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 4, 7, 3, 0, 4, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1, 9, 2, 10, 9, 0, 2, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, 2, 10, 9, 2, 9, 7, 2, 7, 3, 7, 9, 4, -1, -1, -1, -1, 8, 4, 7, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 4, 7, 11, 2, 4, 2, 0, 4, -1, -1, -1, -1, -1, -1, -1, 9, 0, 1, 8, 4, 7, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, 4, 7, 11, 9, 4, 11, 9, 11, 2, 9, 2, 1, -1, -1, -1, -1, 3, 10, 1, 3, 11, 10, 7, 8, 4, -1, -1, -1, -1, -1, -1, -1, 1, 11, 10, 1, 4, 11, 1, 0, 4, 7, 11, 4, -1, -1, -1, -1, 4, 7, 8, 9, 0, 11, 9, 11, 10, 11, 0, 3, -1, -1, -1, -1, 4, 7, 11, 4, 11, 9, 9, 11, 10, -1, -1, -1, -1, -1, -1, -1, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 5, 4, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 4, 1, 5, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 5, 4, 8, 3, 5, 3, 1, 5, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 0, 8, 1, 2, 10, 4, 9, 5, -1, -1, -1, -1, -1, -1, -1, 5, 2, 10, 5, 4, 2, 4, 0, 2, -1, -1, -1, -1, -1, -1, -1, 2, 10, 5, 3, 2, 5, 3, 5, 4, 3, 4, 8, -1, -1, -1, -1, 9, 5, 4, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 11, 2, 0, 8, 11, 4, 9, 5, -1, -1, -1, -1, -1, -1, -1, 0, 5, 4, 0, 1, 5, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, 2, 1, 5, 2, 5, 8, 2, 8, 11, 4, 8, 5, -1, -1, -1, -1, 10, 3, 11, 10, 1, 3, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1, 4, 9, 5, 0, 8, 1, 8, 10, 1, 8, 11, 10, -1, -1, -1, -1, 5, 4, 0, 5, 0, 11, 5, 11, 10, 11, 0, 3, -1, -1, -1, -1, 5, 4, 8, 5, 8, 10, 10, 8, 11, -1, -1, -1, -1, -1, -1, -1, 9, 7, 8, 5, 7, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 3, 0, 9, 5, 3, 5, 7, 3, -1, -1, -1, -1, -1, -1, -1, 0, 7, 8, 0, 1, 7, 1, 5, 7, -1, -1, -1, -1, -1, -1, -1, 1, 5, 3, 3, 5, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 7, 8, 9, 5, 7, 10, 1, 2, -1, -1, -1, -1, -1, -1, -1, 10, 1, 2, 9, 5, 0, 5, 3, 0, 5, 7, 3, -1, -1, -1, -1, 8, 0, 2, 8, 2, 5, 8, 5, 7, 10, 5, 2, -1, -1, -1, -1, 2, 10, 5, 2, 5, 3, 3, 5, 7, -1, -1, -1, -1, -1, -1, -1, 7, 9, 5, 7, 8, 9, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1, 9, 5, 7, 9, 7, 2, 9, 2, 0, 2, 7, 11, -1, -1, -1, -1, 2, 3, 11, 0, 1, 8, 1, 7, 8, 1, 5, 7, -1, -1, -1, -1, 11, 2, 1, 11, 1, 7, 7, 1, 5, -1, -1, -1, -1, -1, -1, -1, 9, 5, 8, 8, 5, 7, 10, 1, 3, 10, 3, 11, -1, -1, -1, -1, 5, 7, 0, 5, 0, 9, 7, 11, 0, 1, 0, 10, 11, 10, 0, -1, 11, 10, 0, 11, 0, 3, 10, 5, 0, 8, 0, 7, 5, 7, 0, -1, 11, 10, 5, 7, 11, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 0, 1, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 8, 3, 1, 9, 8, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, 1, 6, 5, 2, 6, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 6, 5, 1, 2, 6, 3, 0, 8, -1, -1, -1, -1, -1, -1, -1, 9, 6, 5, 9, 0, 6, 0, 2, 6, -1, -1, -1, -1, -1, -1, -1, 5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8, -1, -1, -1, -1, 2, 3, 11, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 0, 8, 11, 2, 0, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, 2, 3, 11, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, 5, 10, 6, 1, 9, 2, 9, 11, 2, 9, 8, 11, -1, -1, -1, -1, 6, 3, 11, 6, 5, 3, 5, 1, 3, -1, -1, -1, -1, -1, -1, -1, 0, 8, 11, 0, 11, 5, 0, 5, 1, 5, 11, 6, -1, -1, -1, -1, 3, 11, 6, 0, 3, 6, 0, 6, 5, 0, 5, 9, -1, -1, -1, -1, 6, 5, 9, 6, 9, 11, 11, 9, 8, -1, -1, -1, -1, -1, -1, -1, 5, 10, 6, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 3, 0, 4, 7, 3, 6, 5, 10, -1, -1, -1, -1, -1, -1, -1, 1, 9, 0, 5, 10, 6, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, 10, 6, 5, 1, 9, 7, 1, 7, 3, 7, 9, 4, -1, -1, -1, -1, 6, 1, 2, 6, 5, 1, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1, 1, 2, 5, 5, 2, 6, 3, 0, 4, 3, 4, 7, -1, -1, -1, -1, 8, 4, 7, 9, 0, 5, 0, 6, 5, 0, 2, 6, -1, -1, -1, -1, 7, 3, 9, 7, 9, 4, 3, 2, 9, 5, 9, 6, 2, 6, 9, -1, 3, 11, 2, 7, 8, 4, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, 5, 10, 6, 4, 7, 2, 4, 2, 0, 2, 7, 11, -1, -1, -1, -1, 0, 1, 9, 4, 7, 8, 2, 3, 11, 5, 10, 6, -1, -1, -1, -1, 9, 2, 1, 9, 11, 2, 9, 4, 11, 7, 11, 4, 5, 10, 6, -1, 8, 4, 7, 3, 11, 5, 3, 5, 1, 5, 11, 6, -1, -1, -1, -1, 5, 1, 11, 5, 11, 6, 1, 0, 11, 7, 11, 4, 0, 4, 11, -1, 0, 5, 9, 0, 6, 5, 0, 3, 6, 11, 6, 3, 8, 4, 7, -1, 6, 5, 9, 6, 9, 11, 4, 7, 9, 7, 11, 9, -1, -1, -1, -1, 10, 4, 9, 6, 4, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 10, 6, 4, 9, 10, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, 10, 0, 1, 10, 6, 0, 6, 4, 0, -1, -1, -1, -1, -1, -1, -1, 8, 3, 1, 8, 1, 6, 8, 6, 4, 6, 1, 10, -1, -1, -1, -1, 1, 4, 9, 1, 2, 4, 2, 6, 4, -1, -1, -1, -1, -1, -1, -1, 3, 0, 8, 1, 2, 9, 2, 4, 9, 2, 6, 4, -1, -1, -1, -1, 0, 2, 4, 4, 2, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 3, 2, 8, 2, 4, 4, 2, 6, -1, -1, -1, -1, -1, -1, -1, 10, 4, 9, 10, 6, 4, 11, 2, 3, -1, -1, -1, -1, -1, -1, -1, 0, 8, 2, 2, 8, 11, 4, 9, 10, 4, 10, 6, -1, -1, -1, -1, 3, 11, 2, 0, 1, 6, 0, 6, 4, 6, 1, 10, -1, -1, -1, -1, 6, 4, 1, 6, 1, 10, 4, 8, 1, 2, 1, 11, 8, 11, 1, -1, 9, 6, 4, 9, 3, 6, 9, 1, 3, 11, 6, 3, -1, -1, -1, -1, 8, 11, 1, 8, 1, 0, 11, 6, 1, 9, 1, 4, 6, 4, 1, -1, 3, 11, 6, 3, 6, 0, 0, 6, 4, -1, -1, -1, -1, -1, -1, -1, 6, 4, 8, 11, 6, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 10, 6, 7, 8, 10, 8, 9, 10, -1, -1, -1, -1, -1, -1, -1, 0, 7, 3, 0, 10, 7, 0, 9, 10, 6, 7, 10, -1, -1, -1, -1, 10, 6, 7, 1, 10, 7, 1, 7, 8, 1, 8, 0, -1, -1, -1, -1, 10, 6, 7, 10, 7, 1, 1, 7, 3, -1, -1, -1, -1, -1, -1, -1, 1, 2, 6, 1, 6, 8, 1, 8, 9, 8, 6, 7, -1, -1, -1, -1, 2, 6, 9, 2, 9, 1, 6, 7, 9, 0, 9, 3, 7, 3, 9, -1, 7, 8, 0, 7, 0, 6, 6, 0, 2, -1, -1, -1, -1, -1, -1, -1, 7, 3, 2, 6, 7, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, 11, 10, 6, 8, 10, 8, 9, 8, 6, 7, -1, -1, -1, -1, 2, 0, 7, 2, 7, 11, 0, 9, 7, 6, 7, 10, 9, 10, 7, -1, 1, 8, 0, 1, 7, 8, 1, 10, 7, 6, 7, 10, 2, 3, 11, -1, 11, 2, 1, 11, 1, 7, 10, 6, 1, 6, 7, 1, -1, -1, -1, -1, 8, 9, 6, 8, 6, 7, 9, 1, 6, 11, 6, 3, 1, 3, 6, -1, 0, 9, 1, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 8, 0, 7, 0, 6, 3, 11, 0, 11, 6, 0, -1, -1, -1, -1, 7, 11, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 0, 8, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 9, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 1, 9, 8, 3, 1, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, 10, 1, 2, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 3, 0, 8, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1, 2, 9, 0, 2, 10, 9, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1, 6, 11, 7, 2, 10, 3, 10, 8, 3, 10, 9, 8, -1, -1, -1, -1, 7, 2, 3, 6, 2, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 7, 0, 8, 7, 6, 0, 6, 2, 0, -1, -1, -1, -1, -1, -1, -1, 2, 7, 6, 2, 3, 7, 0, 1, 9, -1, -1, -1, -1, -1, -1, -1, 1, 6, 2, 1, 8, 6, 1, 9, 8, 8, 7, 6, -1, -1, -1, -1, 10, 7, 6, 10, 1, 7, 1, 3, 7, -1, -1, -1, -1, -1, -1, -1, 10, 7, 6, 1, 7, 10, 1, 8, 7, 1, 0, 8, -1, -1, -1, -1, 0, 3, 7, 0, 7, 10, 0, 10, 9, 6, 10, 7, -1, -1, -1, -1, 7, 6, 10, 7, 10, 8, 8, 10, 9, -1, -1, -1, -1, -1, -1, -1, 6, 8, 4, 11, 8, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 6, 11, 3, 0, 6, 0, 4, 6, -1, -1, -1, -1, -1, -1, -1, 8, 6, 11, 8, 4, 6, 9, 0, 1, -1, -1, -1, -1, -1, -1, -1, 9, 4, 6, 9, 6, 3, 9, 3, 1, 11, 3, 6, -1, -1, -1, -1, 6, 8, 4, 6, 11, 8, 2, 10, 1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 3, 0, 11, 0, 6, 11, 0, 4, 6, -1, -1, -1, -1, 4, 11, 8, 4, 6, 11, 0, 2, 9, 2, 10, 9, -1, -1, -1, -1, 10, 9, 3, 10, 3, 2, 9, 4, 3, 11, 3, 6, 4, 6, 3, -1, 8, 2, 3, 8, 4, 2, 4, 6, 2, -1, -1, -1, -1, -1, -1, -1, 0, 4, 2, 4, 6, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 9, 0, 2, 3, 4, 2, 4, 6, 4, 3, 8, -1, -1, -1, -1, 1, 9, 4, 1, 4, 2, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, 8, 1, 3, 8, 6, 1, 8, 4, 6, 6, 10, 1, -1, -1, -1, -1, 10, 1, 0, 10, 0, 6, 6, 0, 4, -1, -1, -1, -1, -1, -1, -1, 4, 6, 3, 4, 3, 8, 6, 10, 3, 0, 3, 9, 10, 9, 3, -1, 10, 9, 4, 6, 10, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 9, 5, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 4, 9, 5, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, 5, 0, 1, 5, 4, 0, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, 11, 7, 6, 8, 3, 4, 3, 5, 4, 3, 1, 5, -1, -1, -1, -1, 9, 5, 4, 10, 1, 2, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, 6, 11, 7, 1, 2, 10, 0, 8, 3, 4, 9, 5, -1, -1, -1, -1, 7, 6, 11, 5, 4, 10, 4, 2, 10, 4, 0, 2, -1, -1, -1, -1, 3, 4, 8, 3, 5, 4, 3, 2, 5, 10, 5, 2, 11, 7, 6, -1, 7, 2, 3, 7, 6, 2, 5, 4, 9, -1, -1, -1, -1, -1, -1, -1, 9, 5, 4, 0, 8, 6, 0, 6, 2, 6, 8, 7, -1, -1, -1, -1, 3, 6, 2, 3, 7, 6, 1, 5, 0, 5, 4, 0, -1, -1, -1, -1, 6, 2, 8, 6, 8, 7, 2, 1, 8, 4, 8, 5, 1, 5, 8, -1, 9, 5, 4, 10, 1, 6, 1, 7, 6, 1, 3, 7, -1, -1, -1, -1, 1, 6, 10, 1, 7, 6, 1, 0, 7, 8, 7, 0, 9, 5, 4, -1, 4, 0, 10, 4, 10, 5, 0, 3, 10, 6, 10, 7, 3, 7, 10, -1, 7, 6, 10, 7, 10, 8, 5, 4, 10, 4, 8, 10, -1, -1, -1, -1, 6, 9, 5, 6, 11, 9, 11, 8, 9, -1, -1, -1, -1, -1, -1, -1, 3, 6, 11, 0, 6, 3, 0, 5, 6, 0, 9, 5, -1, -1, -1, -1, 0, 11, 8, 0, 5, 11, 0, 1, 5, 5, 6, 11, -1, -1, -1, -1, 6, 11, 3, 6, 3, 5, 5, 3, 1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 10, 9, 5, 11, 9, 11, 8, 11, 5, 6, -1, -1, -1, -1, 0, 11, 3, 0, 6, 11, 0, 9, 6, 5, 6, 9, 1, 2, 10, -1, 11, 8, 5, 11, 5, 6, 8, 0, 5, 10, 5, 2, 0, 2, 5, -1, 6, 11, 3, 6, 3, 5, 2, 10, 3, 10, 5, 3, -1, -1, -1, -1, 5, 8, 9, 5, 2, 8, 5, 6, 2, 3, 8, 2, -1, -1, -1, -1, 9, 5, 6, 9, 6, 0, 0, 6, 2, -1, -1, -1, -1, -1, -1, -1, 1, 5, 8, 1, 8, 0, 5, 6, 8, 3, 8, 2, 6, 2, 8, -1, 1, 5, 6, 2, 1, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 3, 6, 1, 6, 10, 3, 8, 6, 5, 6, 9, 8, 9, 6, -1, 10, 1, 0, 10, 0, 6, 9, 5, 0, 5, 6, 0, -1, -1, -1, -1, 0, 3, 8, 5, 6, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 5, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 5, 10, 7, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 11, 5, 10, 11, 7, 5, 8, 3, 0, -1, -1, -1, -1, -1, -1, -1, 5, 11, 7, 5, 10, 11, 1, 9, 0, -1, -1, -1, -1, -1, -1, -1, 10, 7, 5, 10, 11, 7, 9, 8, 1, 8, 3, 1, -1, -1, -1, -1, 11, 1, 2, 11, 7, 1, 7, 5, 1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 1, 2, 7, 1, 7, 5, 7, 2, 11, -1, -1, -1, -1, 9, 7, 5, 9, 2, 7, 9, 0, 2, 2, 11, 7, -1, -1, -1, -1, 7, 5, 2, 7, 2, 11, 5, 9, 2, 3, 2, 8, 9, 8, 2, -1, 2, 5, 10, 2, 3, 5, 3, 7, 5, -1, -1, -1, -1, -1, -1, -1, 8, 2, 0, 8, 5, 2, 8, 7, 5, 10, 2, 5, -1, -1, -1, -1, 9, 0, 1, 5, 10, 3, 5, 3, 7, 3, 10, 2, -1, -1, -1, -1, 9, 8, 2, 9, 2, 1, 8, 7, 2, 10, 2, 5, 7, 5, 2, -1, 1, 3, 5, 3, 7, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 8, 7, 0, 7, 1, 1, 7, 5, -1, -1, -1, -1, -1, -1, -1, 9, 0, 3, 9, 3, 5, 5, 3, 7, -1, -1, -1, -1, -1, -1, -1, 9, 8, 7, 5, 9, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 5, 8, 4, 5, 10, 8, 10, 11, 8, -1, -1, -1, -1, -1, -1, -1, 5, 0, 4, 5, 11, 0, 5, 10, 11, 11, 3, 0, -1, -1, -1, -1, 0, 1, 9, 8, 4, 10, 8, 10, 11, 10, 4, 5, -1, -1, -1, -1, 10, 11, 4, 10, 4, 5, 11, 3, 4, 9, 4, 1, 3, 1, 4, -1, 2, 5, 1, 2, 8, 5, 2, 11, 8, 4, 5, 8, -1, -1, -1, -1, 0, 4, 11, 0, 11, 3, 4, 5, 11, 2, 11, 1, 5, 1, 11, -1, 0, 2, 5, 0, 5, 9, 2, 11, 5, 4, 5, 8, 11, 8, 5, -1, 9, 4, 5, 2, 11, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 5, 10, 3, 5, 2, 3, 4, 5, 3, 8, 4, -1, -1, -1, -1, 5, 10, 2, 5, 2, 4, 4, 2, 0, -1, -1, -1, -1, -1, -1, -1, 3, 10, 2, 3, 5, 10, 3, 8, 5, 4, 5, 8, 0, 1, 9, -1, 5, 10, 2, 5, 2, 4, 1, 9, 2, 9, 4, 2, -1, -1, -1, -1, 8, 4, 5, 8, 5, 3, 3, 5, 1, -1, -1, -1, -1, -1, -1, -1, 0, 4, 5, 1, 0, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 8, 4, 5, 8, 5, 3, 9, 0, 5, 0, 3, 5, -1, -1, -1, -1, 9, 4, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 11, 7, 4, 9, 11, 9, 10, 11, -1, -1, -1, -1, -1, -1, -1, 0, 8, 3, 4, 9, 7, 9, 11, 7, 9, 10, 11, -1, -1, -1, -1, 1, 10, 11, 1, 11, 4, 1, 4, 0, 7, 4, 11, -1, -1, -1, -1, 3, 1, 4, 3, 4, 8, 1, 10, 4, 7, 4, 11, 10, 11, 4, -1, 4, 11, 7, 9, 11, 4, 9, 2, 11, 9, 1, 2, -1, -1, -1, -1, 9, 7, 4, 9, 11, 7, 9, 1, 11, 2, 11, 1, 0, 8, 3, -1, 11, 7, 4, 11, 4, 2, 2, 4, 0, -1, -1, -1, -1, -1, -1, -1, 11, 7, 4, 11, 4, 2, 8, 3, 4, 3, 2, 4, -1, -1, -1, -1, 2, 9, 10, 2, 7, 9, 2, 3, 7, 7, 4, 9, -1, -1, -1, -1, 9, 10, 7, 9, 7, 4, 10, 2, 7, 8, 7, 0, 2, 0, 7, -1, 3, 7, 10, 3, 10, 2, 7, 4, 10, 1, 10, 0, 4, 0, 10, -1, 1, 10, 2, 8, 7, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 9, 1, 4, 1, 7, 7, 1, 3, -1, -1, -1, -1, -1, -1, -1, 4, 9, 1, 4, 1, 7, 0, 8, 1, 8, 7, 1, -1, -1, -1, -1, 4, 0, 3, 7, 4, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 8, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9, 10, 8, 10, 11, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 0, 9, 3, 9, 11, 11, 9, 10, -1, -1, -1, -1, -1, -1, -1, 0, 1, 10, 0, 10, 8, 8, 10, 11, -1, -1, -1, -1, -1, -1, -1, 3, 1, 10, 11, 3, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 11, 1, 11, 9, 9, 11, 8, -1, -1, -1, -1, -1, -1, -1, 3, 0, 9, 3, 9, 11, 1, 2, 9, 2, 11, 9, -1, -1, -1, -1, 0, 2, 11, 8, 0, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 2, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, 8, 2, 8, 10, 10, 8, 9, -1, -1, -1, -1, -1, -1, -1, 9, 10, 2, 0, 9, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, 8, 2, 8, 10, 0, 1, 8, 1, 10, 8, -1, -1, -1, -1, 1, 10, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 3, 8, 9, 1, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]);
+exports.triTable = triTable;
 },{"three":"../node_modules/three/build/three.module.js"}],"shaders/fragment.glsl":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform vec3 uColor;\nvarying float vNoise;\n\nvoid main(){\n    gl_FragColor = (1. - vNoise) * vec4(uColor, 0.6);\n}";
 },{}],"shaders/vertex.glsl":[function(require,module,exports) {
@@ -54300,13 +57269,14 @@ var Animation = /*#__PURE__*/function () {
 }();
 
 exports.default = Animation;
-},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","gsap":"../node_modules/gsap/index.js","gsap/dist/ScrollTrigger":"../node_modules/gsap/dist/ScrollTrigger.js","gsap/dist/ScrollToPlugin":"../node_modules/gsap/dist/ScrollToPlugin.js","../utils/changeState":"js/utils/changeState.js"}],"js/utils/loadModels.js":[function(require,module,exports) {
+},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","gsap":"../node_modules/gsap/index.js","gsap/dist/ScrollTrigger":"../node_modules/gsap/dist/ScrollTrigger.js","gsap/dist/ScrollToPlugin":"../node_modules/gsap/dist/ScrollToPlugin.js","../utils/changeState":"js/utils/changeState.js"}],"js/utils/utils.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.dumpObject = dumpObject;
+exports.randomInRange = randomInRange;
 
 // function shows all nodes in JSOn-file
 function dumpObject(obj) {
@@ -54326,6 +57296,369 @@ function dumpObject(obj) {
   });
   return lines;
 }
+
+function randomInRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+},{}],"js/utils/perlin.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+/*
+ * A speed-improved perlin and simplex noise algorithms for 2D.
+ *
+ * Based on example code by Stefan Gustavson (stegu@itn.liu.se).
+ * Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
+ * Better rank ordering method by Stefan Gustavson in 2012.
+ * Converted to Javascript by Joseph Gentle.
+ *
+ * Version 2012-03-09
+ *
+ * This code was placed in the public domain by its original author,
+ * Stefan Gustavson. You may use it as you see fit, but
+ * attribution is appreciated.
+ *
+ */
+var _module = {};
+
+function Grad(x, y, z) {
+  this.x = x;
+  this.y = y;
+  this.z = z;
+}
+
+Grad.prototype.dot2 = function (x, y) {
+  return this.x * x + this.y * y;
+};
+
+Grad.prototype.dot3 = function (x, y, z) {
+  return this.x * x + this.y * y + this.z * z;
+};
+
+var grad3 = [new Grad(1, 1, 0), new Grad(-1, 1, 0), new Grad(1, -1, 0), new Grad(-1, -1, 0), new Grad(1, 0, 1), new Grad(-1, 0, 1), new Grad(1, 0, -1), new Grad(-1, 0, -1), new Grad(0, 1, 1), new Grad(0, -1, 1), new Grad(0, 1, -1), new Grad(0, -1, -1)];
+var p = [151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180]; // To remove the need for index wrapping, double the permutation table length
+
+var perm = new Array(512);
+var gradP = new Array(512); // This isn't a very good seeding function, but it works ok. It supports 2^16
+// different seed values. Write something better if you need more seeds.
+
+_module.seed = function (seed) {
+  if (seed > 0 && seed < 1) {
+    // Scale the seed out
+    seed *= 65536;
+  }
+
+  seed = Math.floor(seed);
+
+  if (seed < 256) {
+    seed |= seed << 8;
+  }
+
+  for (var i = 0; i < 256; i++) {
+    var v;
+
+    if (i & 1) {
+      v = p[i] ^ seed & 255;
+    } else {
+      v = p[i] ^ seed >> 8 & 255;
+    }
+
+    perm[i] = perm[i + 256] = v;
+    gradP[i] = gradP[i + 256] = grad3[v % 12];
+  }
+};
+
+_module.seed(0);
+/*
+for(var i=0; i<256; i++) {
+  perm[i] = perm[i + 256] = p[i];
+  gradP[i] = gradP[i + 256] = grad3[perm[i] % 12];
+}*/
+// Skewing and unskewing factors for 2, 3, and 4 dimensions
+
+
+var F2 = 0.5 * (Math.sqrt(3) - 1);
+var G2 = (3 - Math.sqrt(3)) / 6;
+var F3 = 1 / 3;
+var G3 = 1 / 6; // 2D simplex noise
+
+_module.simplex2 = function (xin, yin) {
+  var n0, n1, n2; // Noise contributions from the three corners
+  // Skew the input space to determine which simplex cell we're in
+
+  var s = (xin + yin) * F2; // Hairy factor for 2D
+
+  var i = Math.floor(xin + s);
+  var j = Math.floor(yin + s);
+  var t = (i + j) * G2;
+  var x0 = xin - i + t; // The x,y distances from the cell origin, unskewed.
+
+  var y0 = yin - j + t; // For the 2D case, the simplex shape is an equilateral triangle.
+  // Determine which simplex we are in.
+
+  var i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
+
+  if (x0 > y0) {
+    // lower triangle, XY order: (0,0)->(1,0)->(1,1)
+    i1 = 1;
+    j1 = 0;
+  } else {
+    // upper triangle, YX order: (0,0)->(0,1)->(1,1)
+    i1 = 0;
+    j1 = 1;
+  } // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
+  // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
+  // c = (3-sqrt(3))/6
+
+
+  var x1 = x0 - i1 + G2; // Offsets for middle corner in (x,y) unskewed coords
+
+  var y1 = y0 - j1 + G2;
+  var x2 = x0 - 1 + 2 * G2; // Offsets for last corner in (x,y) unskewed coords
+
+  var y2 = y0 - 1 + 2 * G2; // Work out the hashed gradient indices of the three simplex corners
+
+  i &= 255;
+  j &= 255;
+  var gi0 = gradP[i + perm[j]];
+  var gi1 = gradP[i + i1 + perm[j + j1]];
+  var gi2 = gradP[i + 1 + perm[j + 1]]; // Calculate the contribution from the three corners
+
+  var t0 = 0.5 - x0 * x0 - y0 * y0;
+
+  if (t0 < 0) {
+    n0 = 0;
+  } else {
+    t0 *= t0;
+    n0 = t0 * t0 * gi0.dot2(x0, y0); // (x,y) of grad3 used for 2D gradient
+  }
+
+  var t1 = 0.5 - x1 * x1 - y1 * y1;
+
+  if (t1 < 0) {
+    n1 = 0;
+  } else {
+    t1 *= t1;
+    n1 = t1 * t1 * gi1.dot2(x1, y1);
+  }
+
+  var t2 = 0.5 - x2 * x2 - y2 * y2;
+
+  if (t2 < 0) {
+    n2 = 0;
+  } else {
+    t2 *= t2;
+    n2 = t2 * t2 * gi2.dot2(x2, y2);
+  } // Add contributions from each corner to get the final noise value.
+  // The result is scaled to return values in the interval [-1,1].
+
+
+  return 70 * (n0 + n1 + n2);
+}; // 3D simplex noise
+
+
+_module.simplex3 = function (xin, yin, zin) {
+  var n0, n1, n2, n3; // Noise contributions from the four corners
+  // Skew the input space to determine which simplex cell we're in
+
+  var s = (xin + yin + zin) * F3; // Hairy factor for 2D
+
+  var i = Math.floor(xin + s);
+  var j = Math.floor(yin + s);
+  var k = Math.floor(zin + s);
+  var t = (i + j + k) * G3;
+  var x0 = xin - i + t; // The x,y distances from the cell origin, unskewed.
+
+  var y0 = yin - j + t;
+  var z0 = zin - k + t; // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
+  // Determine which simplex we are in.
+
+  var i1, j1, k1; // Offsets for second corner of simplex in (i,j,k) coords
+
+  var i2, j2, k2; // Offsets for third corner of simplex in (i,j,k) coords
+
+  if (x0 >= y0) {
+    if (y0 >= z0) {
+      i1 = 1;
+      j1 = 0;
+      k1 = 0;
+      i2 = 1;
+      j2 = 1;
+      k2 = 0;
+    } else if (x0 >= z0) {
+      i1 = 1;
+      j1 = 0;
+      k1 = 0;
+      i2 = 1;
+      j2 = 0;
+      k2 = 1;
+    } else {
+      i1 = 0;
+      j1 = 0;
+      k1 = 1;
+      i2 = 1;
+      j2 = 0;
+      k2 = 1;
+    }
+  } else {
+    if (y0 < z0) {
+      i1 = 0;
+      j1 = 0;
+      k1 = 1;
+      i2 = 0;
+      j2 = 1;
+      k2 = 1;
+    } else if (x0 < z0) {
+      i1 = 0;
+      j1 = 1;
+      k1 = 0;
+      i2 = 0;
+      j2 = 1;
+      k2 = 1;
+    } else {
+      i1 = 0;
+      j1 = 1;
+      k1 = 0;
+      i2 = 1;
+      j2 = 1;
+      k2 = 0;
+    }
+  } // A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
+  // a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
+  // a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
+  // c = 1/6.
+
+
+  var x1 = x0 - i1 + G3; // Offsets for second corner
+
+  var y1 = y0 - j1 + G3;
+  var z1 = z0 - k1 + G3;
+  var x2 = x0 - i2 + 2 * G3; // Offsets for third corner
+
+  var y2 = y0 - j2 + 2 * G3;
+  var z2 = z0 - k2 + 2 * G3;
+  var x3 = x0 - 1 + 3 * G3; // Offsets for fourth corner
+
+  var y3 = y0 - 1 + 3 * G3;
+  var z3 = z0 - 1 + 3 * G3; // Work out the hashed gradient indices of the four simplex corners
+
+  i &= 255;
+  j &= 255;
+  k &= 255;
+  var gi0 = gradP[i + perm[j + perm[k]]];
+  var gi1 = gradP[i + i1 + perm[j + j1 + perm[k + k1]]];
+  var gi2 = gradP[i + i2 + perm[j + j2 + perm[k + k2]]];
+  var gi3 = gradP[i + 1 + perm[j + 1 + perm[k + 1]]]; // Calculate the contribution from the four corners
+
+  var t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
+
+  if (t0 < 0) {
+    n0 = 0;
+  } else {
+    t0 *= t0;
+    n0 = t0 * t0 * gi0.dot3(x0, y0, z0); // (x,y) of grad3 used for 2D gradient
+  }
+
+  var t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
+
+  if (t1 < 0) {
+    n1 = 0;
+  } else {
+    t1 *= t1;
+    n1 = t1 * t1 * gi1.dot3(x1, y1, z1);
+  }
+
+  var t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
+
+  if (t2 < 0) {
+    n2 = 0;
+  } else {
+    t2 *= t2;
+    n2 = t2 * t2 * gi2.dot3(x2, y2, z2);
+  }
+
+  var t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
+
+  if (t3 < 0) {
+    n3 = 0;
+  } else {
+    t3 *= t3;
+    n3 = t3 * t3 * gi3.dot3(x3, y3, z3);
+  } // Add contributions from each corner to get the final noise value.
+  // The result is scaled to return values in the interval [-1,1].
+
+
+  return 32 * (n0 + n1 + n2 + n3);
+}; // ##### Perlin noise stuff
+
+
+function fade(t) {
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+function lerp(a, b, t) {
+  return (1 - t) * a + t * b;
+} // 2D Perlin Noise
+
+
+_module.perlin2 = function (x, y) {
+  // Find unit grid cell containing point
+  var X = Math.floor(x),
+      Y = Math.floor(y); // Get relative xy coordinates of point within that cell
+
+  x = x - X;
+  y = y - Y; // Wrap the integer cells at 255 (smaller integer period can be introduced here)
+
+  X = X & 255;
+  Y = Y & 255; // Calculate noise contributions from each of the four corners
+
+  var n00 = gradP[X + perm[Y]].dot2(x, y);
+  var n01 = gradP[X + perm[Y + 1]].dot2(x, y - 1);
+  var n10 = gradP[X + 1 + perm[Y]].dot2(x - 1, y);
+  var n11 = gradP[X + 1 + perm[Y + 1]].dot2(x - 1, y - 1); // Compute the fade curve value for x
+
+  var u = fade(x); // Interpolate the four results
+
+  return lerp(lerp(n00, n10, u), lerp(n01, n11, u), fade(y));
+}; // 3D Perlin Noise
+
+
+_module.perlin3 = function (x, y, z) {
+  // Find unit grid cell containing point
+  var X = Math.floor(x),
+      Y = Math.floor(y),
+      Z = Math.floor(z); // Get relative xyz coordinates of point within that cell
+
+  x = x - X;
+  y = y - Y;
+  z = z - Z; // Wrap the integer cells at 255 (smaller integer period can be introduced here)
+
+  X = X & 255;
+  Y = Y & 255;
+  Z = Z & 255; // Calculate noise contributions from each of the eight corners
+
+  var n000 = gradP[X + perm[Y + perm[Z]]].dot3(x, y, z);
+  var n001 = gradP[X + perm[Y + perm[Z + 1]]].dot3(x, y, z - 1);
+  var n010 = gradP[X + perm[Y + 1 + perm[Z]]].dot3(x, y - 1, z);
+  var n011 = gradP[X + perm[Y + 1 + perm[Z + 1]]].dot3(x, y - 1, z - 1);
+  var n100 = gradP[X + 1 + perm[Y + perm[Z]]].dot3(x - 1, y, z);
+  var n101 = gradP[X + 1 + perm[Y + perm[Z + 1]]].dot3(x - 1, y, z - 1);
+  var n110 = gradP[X + 1 + perm[Y + 1 + perm[Z]]].dot3(x - 1, y - 1, z);
+  var n111 = gradP[X + 1 + perm[Y + 1 + perm[Z + 1]]].dot3(x - 1, y - 1, z - 1); // Compute the fade curve value for x, y, z
+
+  var u = fade(x);
+  var v = fade(y);
+  var w = fade(z); // Interpolate
+
+  return lerp(lerp(lerp(n000, n100, u), lerp(n001, n101, u), w), lerp(lerp(n010, n110, u), lerp(n011, n111, u), w), v);
+};
+
+var _default = _module;
+exports.default = _default;
 },{}],"js/classes/Blob.class.js":[function(require,module,exports) {
 "use strict";
 
@@ -54338,17 +57671,15 @@ require("regenerator-runtime/runtime");
 
 var THREE = _interopRequireWildcard(require("three"));
 
+var _lilGui = _interopRequireDefault(require("lil-gui"));
+
+var _OrbitControls = require("three/examples/jsm/controls/OrbitControls");
+
 var _gsap = require("gsap");
 
-<<<<<<< HEAD
-var _MarchingCubes = require("three/examples/jsm/objects/MarchingCubes");
-
-var _lilGui = _interopRequireDefault(require("lil-gui"));
-||||||| 8622421
-var _lilGui = _interopRequireDefault(require("lil-gui"));
-=======
 var _GLTFLoader = require("three/examples/jsm/loaders/GLTFLoader");
->>>>>>> master
+
+var _MarchingCubes = require("three/examples/jsm/objects/MarchingCubes");
 
 var _fragment = _interopRequireDefault(require("../../shaders/fragment.glsl"));
 
@@ -54356,7 +57687,9 @@ var _vertex = _interopRequireDefault(require("../../shaders/vertex.glsl"));
 
 var _Animation = _interopRequireDefault(require("./Animation.class"));
 
-var _loadModels = require("../utils/loadModels");
+var _utils = require("../utils/utils");
+
+var _perlin = _interopRequireDefault(require("../utils/perlin"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -54390,25 +57723,20 @@ var Blob = /*#__PURE__*/function () {
     this.container.appendChild(this.renderer.domElement); // CAMERA
 
     this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
-<<<<<<< HEAD
-    this.camera.position.set(0, 0, 2.8); // LIGHTS
-
-    var light = new THREE.DirectionalLight(0xffffff);
-    light.position.set(1.5, 0, 5);
-    this.scene.add(light); // const pointLight = new THREE.PointLight( 0xffffff );
-    // pointLight.position.set( 1.5, 0, 5 );
-    // this.scene.add( pointLight );
-
-    var ambientLight = new THREE.AmbientLight(0xffffff);
-    ambientLight.position.set(1.5, 0, 2);
-    this.scene.add(ambientLight);
-||||||| 8622421
-    this.camera.position.set(0, 0, 2.8);
-=======
-    this.camera.position.set(-1, 0, 2.8); // LIGHTS
+    this.camera.position.set(-4, 0, 2.8);
+    this.controls = new _OrbitControls.OrbitControls(this.camera, this.renderer.domElement); // LIGHTS
 
     var light = new THREE.DirectionalLight(0xffffff);
     light.position.set(0.5, 0, 5);
+    var r = 3;
+    light.shadow.camera.near = .001;
+    light.shadow.camera.far = 10;
+    light.shadow.camera.left = -r;
+    light.shadow.camera.right = r;
+    light.shadow.camera.top = r;
+    light.shadow.camera.bottom = -r;
+    light.shadow.camera.updateProjectionMatrix();
+    light.castShadow = true;
     this.scene.add(light);
     var pointLight = new THREE.PointLight(0xffffff);
     pointLight.position.set(1.5, 0, 5);
@@ -54417,7 +57745,6 @@ var Blob = /*#__PURE__*/function () {
     ambientLight.position.set(0.5, 0, 2);
     this.scene.add(ambientLight); // MAIN VARIABLES
 
->>>>>>> master
     this.time = 0;
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
     this.isPlaying = true;
@@ -54428,7 +57755,8 @@ var Blob = /*#__PURE__*/function () {
     };
     this.geometries = {
       blob: null
-    }; // IPADS VARIABLES
+    };
+    this.blobs = []; // IPADS VARIABLES
 
     this.group = new THREE.Group();
     this.ipads = [];
@@ -54436,86 +57764,77 @@ var Blob = /*#__PURE__*/function () {
     this.isRotating = false; // METHODS
 
     this.settings();
-<<<<<<< HEAD
-    this.addBlob(); // this.addMarching();
-
-    this.gltfModelLoad();
-||||||| 8622421
-    this.addBlob();
-    this.gltfModelLoad();
-=======
     this.setupMaterials();
     this.addIpads();
     this.addBlob();
->>>>>>> master
+    this.addMarching();
     this.resize();
     this.render();
     this.setupListeners();
   }
 
   _createClass(Blob, [{
-<<<<<<< HEAD
     key: "addMarching",
     value: function addMarching() {
       // MARCHING CUBES
-      this.resolution = 28;
-      this.ballMaterial = new THREE.MeshPhysicalMaterial({}); // new THREE.MeshPhongMaterial( { specular: 0x888888, shininess: 250, color: 0xf0712c } );
-
-      this.effect = new _MarchingCubes.MarchingCubes(this.resolution, this.ballMaterial, true, true, 100000);
-      this.effect.position.set(-1, 0, 0);
-      this.effect.scale.set(1, 1, 1);
+      this.resolution = 32;
+      this.ballMaterial = new THREE.MeshMatcapMaterial({
+        color: 0xfff68f
+      });
+      this.effect = new _MarchingCubes.MarchingCubes(this.resolution, this.ballMaterial, true, true);
+      this.effect.position.set(-4, 0, 0);
       this.effect.enableUvs = false;
-      this.effect.enableColors = false; // this.effect.isolation = 10;
+      this.effect.enableColors = false;
+      this.effect.init(this.resolution);
+      this.effect.isolation = 20; // this.mesh = new THREE.Mesh(this.effect.geometry, this.ballMaterial);
 
+      this.effect.scale.set(1, 1, 1);
+      this.effect.castShadow = true;
+      this.effect.receiveShadow = true;
       this.scene.add(this.effect);
+      var numBlobs = 20;
+
+      for (var j = 0; j < numBlobs; j++) {
+        this.blobs.push({
+          theta: (0, _utils.randomInRange)(0, Math.PI),
+          phi: (0, _utils.randomInRange)(0, 2 * Math.PI),
+          offset: (0, _utils.randomInRange)(0, 2 * Math.PI)
+        });
+      }
+
+      console.log(this.blobs);
     }
   }, {
     key: "updateCubes",
-    value: function updateCubes(object, time, numblobs) {
-      object.reset();
-      var subtract = 12;
-      var strength = 1.2 / ((Math.sqrt(numblobs) - 1) / 4 + 1);
+    value: function updateCubes(effect, TIME, blobs) {
+      effect.isolation = 500;
+      effect.reset();
+      var PI = Math.PI;
+      var TAU = 2 * Math.PI;
+      var radius = 0.25;
+      var time = TIME % 6;
+      var t = time / 6;
+      var tmpVector = new THREE.Vector3();
+      blobs.forEach(function (blob) {
+        var r = radius * Math.cos(t * TAU + blob.offset);
+        tmpVector.x = r * Math.sin(blob.theta) * Math.cos(blob.phi);
+        tmpVector.y = r * Math.sin(blob.theta) * Math.sin(blob.phi);
+        tmpVector.z = r * Math.cos(blob.theta);
+        var s = 3.0;
+        var offset = Math.cos(t * TAU) * s;
 
-      for (var i = 0; i < numblobs; i++) {
-        var ballx = Math.sin(i + 1.26 * time * (1.03 + 0.5 * Math.cos(0.21 * i))) * 0.27 + 0.5;
-        var bally = Math.abs(Math.cos(i + 1.12 * time * Math.cos(1.22 + 0.1424 * i))) * 0.77; // dip into the floor
+        var strength = 0.1 + 4 * (0.5 + .5 * _perlin.default.perlin3(s * tmpVector.x + offset, s * tmpVector.y + .5 * offset, s * tmpVector.z + .4 * offset));
 
-        var ballz = Math.cos(i + 1.32 * time * 0.1 * Math.sin(0.92 + 0.53 * i)) * 0.27 + 0.5;
-        object.addBall(ballx, bally, ballz, strength, subtract);
-      }
+        var subtract = 10 + 20 * (.5 + .5 * _perlin.default.perlin3(s * tmpVector.x + 1.2 * offset, s * tmpVector.y + .8 * offset, s * tmpVector.z + .9 * offset));
+
+        effect.addBall(tmpVector.x + .5, tmpVector.y + .5, tmpVector.z + .5, strength, subtract);
+      }); // this.mesh.geometry.dispose();
+      // this.mesh.geometry = effect.geometry;
+
+      effect.material.opacity = 1 * time / 8; // effect.rotation.z = t * TAU;
+      // effect.rotation.x = t * TAU;
     }
   }, {
-    key: "settings",
-    value: function settings() {
-      this.settings = {
-        koeff: 0,
-        r: 0.94,
-        g: 0.44,
-        b: 0.17
-      }; // this.gui = new GUI();
-      // this.gui.add(this.settings, "koeff", 0, 10, 0.1);
-      // this.gui.add(this.settings, "r", 0, 1, 0.01);
-      // this.gui.add(this.settings, "g", 0, 1, 0.01);
-      // this.gui.add(this.settings, "b", 0, 1, 0.01);
-    }
-  }, {
-||||||| 8622421
-    key: "settings",
-    value: function settings() {
-      this.settings = {
-        koeff: 2.2,
-        r: 0.94,
-        g: 0.44,
-        b: 0.17
-      }; // this.gui = new GUI();
-      // this.gui.add(this.settings, "koeff", 0, 10, 0.1);
-      // this.gui.add(this.settings, "r", 0, 1, 0.01);
-      // this.gui.add(this.settings, "g", 0, 1, 0.01);
-      // this.gui.add(this.settings, "b", 0, 1, 0.01);
-    }
-  }, {
-=======
->>>>>>> master
     key: "setupListeners",
     value: function setupListeners() {
       this.mouse = {
@@ -54569,30 +57888,6 @@ var Blob = /*#__PURE__*/function () {
       });
     }
   }, {
-<<<<<<< HEAD
-    key: "render",
-    value: function render() {
-      if (!this.isPlaying) return;
-      this.time += 0.05;
-      this.material.uniforms.time.value = this.time / 7;
-      this.material.uniforms.koeff.value = this.settings.koeff;
-      this.color.set(this.settings.r, this.settings.g, this.settings.b);
-      this.material.uniforms.uColor.value = this.color; // this.updateCubes( this.effect, this.time / 3, 4 );
-
-      requestAnimationFrame(this.render.bind(this));
-      this.renderer.render(this.scene, this.camera);
-||||||| 8622421
-    key: "render",
-    value: function render() {
-      if (!this.isPlaying) return;
-      this.time += 0.05;
-      this.material.uniforms.time.value = this.time / 7;
-      this.material.uniforms.koeff.value = this.settings.koeff;
-      this.color.set(this.settings.r, this.settings.g, this.settings.b);
-      this.material.uniforms.uColor.value = this.color;
-      requestAnimationFrame(this.render.bind(this));
-      this.renderer.render(this.scene, this.camera);
-=======
     key: "addBlob",
     value: function addBlob() {
       this.geometries.blob = new THREE.SphereBufferGeometry(1, 100, 100);
@@ -54600,7 +57895,6 @@ var Blob = /*#__PURE__*/function () {
       this.sphere.position.set(-1, 0, 0);
       this.scene.add(this.sphere);
       new _Animation.default(this.camera, this.sphere, this.ipads);
->>>>>>> master
     }
   }, {
     key: "addIpads",
@@ -54626,28 +57920,9 @@ var Blob = /*#__PURE__*/function () {
             child["material"] = _this.materials.ipadMetal;
           });
 
-<<<<<<< HEAD
-          ipad["children"].forEach(function (tv) {
-            tv["material"] = new THREE.MeshPhongMaterial({
-              shininess: 250,
-              color: 0xf0eae5
-            });
-          });
-
-          _this.group.add(ipad);
-||||||| 8622421
-          _this.group.add(ipad); // console.log(this.dumpObject(ipad).join('\n'));
-=======
           _this.group.add(ipad);
         }); // console.log(this.dumpObject(root).join('\n'));
->>>>>>> master
 
-<<<<<<< HEAD
-          console.log(_this.dumpObject(ipad).join('\n'));
-        });
-||||||| 8622421
-        });
-=======
       });
       this.scene.add(this.group);
     }
@@ -54655,7 +57930,6 @@ var Blob = /*#__PURE__*/function () {
     key: "mousemove",
     value: function mousemove(event) {
       var _this2 = this;
->>>>>>> master
 
       // rotate ipads on mousemove
       if (!this.isRotating) {
@@ -54678,7 +57952,9 @@ var Blob = /*#__PURE__*/function () {
 
 
       this.sphere.rotateY(-1 * (this.mouse.x - event.x) / 1000);
-      this.sphere.rotateX(-1 * (this.mouse.y - event.y) / 1000); // set new mouse coords
+      this.sphere.rotateX(-1 * (this.mouse.y - event.y) / 1000);
+      this.effect.rotateY(-1 * (this.mouse.x - event.x) / 1000);
+      this.effect.rotateX(-1 * (this.mouse.y - event.y) / 1000); // set new mouse coords
 
       this.mouse.x = event.x;
       this.mouse.y = event.y;
@@ -54692,7 +57968,8 @@ var Blob = /*#__PURE__*/function () {
       this.materials.blob.uniforms.time.value = this.time / 7;
       this.materials.blob.uniforms.koeff.value = this.settings.koeff;
       this.color.set(this.settings.r, this.settings.g, this.settings.b);
-      this.materials.blob.uniforms.uColor.value = this.color; // render
+      this.materials.blob.uniforms.uColor.value = this.color;
+      this.updateCubes(this.effect, this.time / 3, this.blobs); // render
 
       requestAnimationFrame(this.render.bind(this));
       this.renderer.render(this.scene, this.camera);
@@ -54733,13 +58010,7 @@ exports.default = Blob;
 new Blob({
   dom: document.querySelector("#container")
 });
-<<<<<<< HEAD
-},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","three":"../node_modules/three/build/three.module.js","three/examples/jsm/loaders/GLTFLoader":"../node_modules/three/examples/jsm/loaders/GLTFLoader.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/objects/MarchingCubes":"../node_modules/three/examples/jsm/objects/MarchingCubes.js","lil-gui":"../node_modules/lil-gui/dist/lil-gui.esm.js","../../shaders/fragment.glsl":"shaders/fragment.glsl","../../shaders/vertex.glsl":"shaders/vertex.glsl","./Animation.class":"js/classes/Animation.class.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
-||||||| 8622421
-},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","three":"../node_modules/three/build/three.module.js","three/examples/jsm/loaders/GLTFLoader":"../node_modules/three/examples/jsm/loaders/GLTFLoader.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","lil-gui":"../node_modules/lil-gui/dist/lil-gui.esm.js","../../shaders/fragment.glsl":"shaders/fragment.glsl","../../shaders/vertex.glsl":"shaders/vertex.glsl","./Animation.class":"js/classes/Animation.class.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
-=======
-},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","three":"../node_modules/three/build/three.module.js","gsap":"../node_modules/gsap/index.js","three/examples/jsm/loaders/GLTFLoader":"../node_modules/three/examples/jsm/loaders/GLTFLoader.js","../../shaders/fragment.glsl":"shaders/fragment.glsl","../../shaders/vertex.glsl":"shaders/vertex.glsl","./Animation.class":"js/classes/Animation.class.js","../utils/loadModels":"js/utils/loadModels.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
->>>>>>> master
+},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","three":"../node_modules/three/build/three.module.js","lil-gui":"../node_modules/lil-gui/dist/lil-gui.esm.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","gsap":"../node_modules/gsap/index.js","three/examples/jsm/loaders/GLTFLoader":"../node_modules/three/examples/jsm/loaders/GLTFLoader.js","three/examples/jsm/objects/MarchingCubes":"../node_modules/three/examples/jsm/objects/MarchingCubes.js","../../shaders/fragment.glsl":"shaders/fragment.glsl","../../shaders/vertex.glsl":"shaders/vertex.glsl","./Animation.class":"js/classes/Animation.class.js","../utils/utils":"js/utils/utils.js","../utils/perlin":"js/utils/perlin.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -54767,13 +58038,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-<<<<<<< HEAD
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61134" + '/');
-||||||| 8622421
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63997" + '/');
-=======
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61822" + '/');
->>>>>>> master
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51948" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

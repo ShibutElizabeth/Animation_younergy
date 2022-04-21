@@ -31,6 +31,8 @@ nbproject
 _tmp
 node_modules
 bower_components
+dist
+.parcel-cache
 
 # Local Netlify folder
 .netlify

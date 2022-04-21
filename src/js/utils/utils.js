@@ -11,3 +11,7 @@ export function dumpObject(obj, lines = [], isLast = true, prefix = '') {
     });
     return lines;
 }
+
+export function randomInRange ( min, max ) {
+    return min + Math.random() * ( max - min );
+}
