@@ -2,6 +2,7 @@ import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes';
 import GUI from 'lil-gui';
 import fragmentShader from '../../shaders/fragment.glsl';
 import vertexShader from '../../shaders/vertex.glsl';
@@ -27,6 +28,20 @@ export default class Blob {
     this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
 
     this.camera.position.set(0, 0, 2.8);
+    // LIGHTS
+
+			const light = new THREE.DirectionalLight( 0xffffff );
+			light.position.set( 1.5, 0, 5 );
+			this.scene.add( light );
+
+			// const pointLight = new THREE.PointLight( 0xffffff );
+			// pointLight.position.set( 1.5, 0, 5 );
+			// this.scene.add( pointLight );
+
+			const ambientLight = new THREE.AmbientLight( 0xffffff );
+      ambientLight.position.set( 1.5, 0, 2 );
+			this.scene.add( ambientLight );
+
 
     this.time = 0;
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
@@ -37,15 +52,51 @@ export default class Blob {
 
     this.settings();
     this.addBlob();
+    // this.addMarching();
     this.gltfModelLoad();
     this.resize();
     this.render();
     this.setupListeners();
+    
   }
  
+  addMarching() {
+    // MARCHING CUBES
+
+		this.resolution = 28;
+    this.ballMaterial = new THREE.MeshPhysicalMaterial({  });
+    // new THREE.MeshPhongMaterial( { specular: 0x888888, shininess: 250, color: 0xf0712c } );
+		this.effect = new MarchingCubes( this.resolution, this.ballMaterial, true, true, 100000 );
+		this.effect.position.set( -1, 0, 0 );
+	  this.effect.scale.set( 1, 1, 1);
+		this.effect.enableUvs = false;
+    this.effect.enableColors = false;
+    // this.effect.isolation = 10;
+
+    this.scene.add( this.effect );
+  }
+
+  updateCubes( object, time, numblobs ) {
+
+    object.reset();
+
+    const subtract = 12;
+    const strength = 1.2 / ( ( Math.sqrt( numblobs ) - 1 ) / 4 + 1 );
+
+    for ( let i = 0; i < numblobs; i ++ ) {
+
+      const ballx = Math.sin( i + 1.26 * time * ( 1.03 + 0.5 * Math.cos( 0.21 * i ) ) ) * 0.27 + 0.5;
+      const bally = Math.abs( Math.cos( i + 1.12 * time * Math.cos( 1.22 + 0.1424 * i ) ) ) * 0.77; // dip into the floor
+      const ballz = Math.cos( i + 1.32 * time * 0.1 * Math.sin( ( 0.92 + 0.53 * i ) ) ) * 0.27 + 0.5;
+
+      object.addBall( ballx, bally, ballz, strength, subtract );
+
+    }
+  }
+
   settings() {
     this.settings = {
-      koeff: 2.2,
+      koeff: 0,
       r: 0.94,
       g: 0.44,
       b: 0.17,
@@ -123,6 +174,8 @@ export default class Blob {
     this.material.uniforms.koeff.value = this.settings.koeff;
     this.color.set(this.settings.r, this.settings.g, this.settings.b);
     this.material.uniforms.uColor.value = this.color;
+    
+    // this.updateCubes( this.effect, this.time / 3, 4 );
     requestAnimationFrame(this.render.bind(this));
     this.renderer.render(this.scene, this.camera);
   }
@@ -147,13 +200,17 @@ export default class Blob {
           ipad.rotateY(Math.PI/2);
         } else if(idx == 1){
           ipad.position.set(0.8, 0, 1.2);
+          
         } else {
           ipad.position.set(1.0, 0, 0);
           ipad.rotateY(-Math.PI/2);
         }
+        ipad["children"].forEach(tv => {
+          tv["material"] = new THREE.MeshPhongMaterial({ shininess: 250, color: 0xf0eae5 });
+        });
         this.group.add(ipad);
         
-        // console.log(this.dumpObject(ipad).join('\n'));
+        console.log(this.dumpObject(ipad).join('\n'));
       });
       this.box = new THREE.Box3().setFromObject(this.group);
       this.box.center(new THREE.Vector3(3, 0, 0)); // this re-sets the mesh position
