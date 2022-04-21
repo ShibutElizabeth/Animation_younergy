@@ -24,7 +24,7 @@ export default class Animation {
               end: 'bottom-=10px top',
               scrub: 2,
               onEnterBack: () => {
-                changePosition(that.target.position, { x: 0 });
+                changePosition(that.target.position, { x: -1 });
                 changeSize(that.target.scale, { size: 1 });
                 changeSize(that.ipads[2].scale, { size: 0.000000001, duration: 0.1 });
                 changeSize(that.ipads[1].scale, { size: 0.000000001, duration: 0.1 });
@@ -40,7 +40,7 @@ export default class Animation {
               end: 'bottom-=10px top',
               scrub: 2,
               onEnter: () => {
-                changePosition(that.target.position, { x: 1, duration: 2, ease: 'elastic.out(1, 0.7)' });
+                changePosition(that.target.position, { x: 0, duration: 2, ease: 'elastic.out(1, 0.7)' });
                 changeSize(that.target.scale, { size: 0.5 });
                 changeSize(that.ipads[0].scale, { size: 0.0008 });
                 changeSize(that.ipads[1].scale, { size: 0.0008 });
