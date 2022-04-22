@@ -38,7 +38,7 @@ export default class Blob {
 
     // LIGHTS
     const light = new THREE.DirectionalLight(0xffffff);
-    light.position.set(0.5, 0, 5);
+    light.position.set(1.5, 0, 5);
     const r = 3;
     light.shadow.camera.near = .001;
     light.shadow.camera.far = 10;
@@ -50,6 +50,9 @@ export default class Blob {
     light.castShadow = true;
     this.scene.add(light);
 
+    const light2 = new THREE.DirectionalLight(0xffffff, 1);
+    light2.position.set(0.5, 0, 5);
+    this.scene.add(light2)
     const pointLight = new THREE.PointLight(0xffffff);
     pointLight.position.set(1.5, 0, 5);
     this.scene.add(pointLight);
@@ -93,17 +96,34 @@ export default class Blob {
   addMarching() {
     // MARCHING CUBES
 
-    this.resolution = 32;
-    this.ballMaterial =  new THREE.MeshMatcapMaterial( {  color: 0xfff68f } );
+    this.resolution = 40;
+
+    const texture = new THREE.TextureLoader().load( "js/classes/tex.jpg" );
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set( 1, 1 );
+    // console.log(texture)
+    // this.scene.fog.color = 0xffd500;
+    this.ballMaterial =  new THREE.MeshPhysicalMaterial( { 
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1,
+      metalness: 0.1,
+      color: 0xfe4c00,
+      emissive: 0xfe4c00,
+      reflectivity: 1.0,
+      // normalMap: texture,
+      normalScale: new THREE.Vector2(3, 3),
+      envMap: null,
+    } );
     this.effect = new MarchingCubes(this.resolution, this.ballMaterial, true, true);
-    this.effect.position.set(-4, 0, 0);
+    this.effect.position.set(1, 0, 0);
     this.effect.enableUvs = false;
     this.effect.enableColors = false;
     this.effect.init(this.resolution);
     this.effect.isolation = 20;
 
     // this.mesh = new THREE.Mesh(this.effect.geometry, this.ballMaterial);
-    this.effect.scale.set(1, 1, 1);
+    this.effect.scale.set(1.2, 1.2, 1.2);
     this.effect.castShadow = true;
     this.effect.receiveShadow = true;
 
