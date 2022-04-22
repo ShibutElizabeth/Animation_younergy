@@ -15,5 +15,6 @@ export function changeSize (target, options) {
       y: options.size || 1,
       z: options.size || 1,
       duration: options.duration || 1,
+      ease: options.ease || "none",
     });
 }

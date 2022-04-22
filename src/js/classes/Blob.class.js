@@ -32,9 +32,9 @@ export default class Blob {
 
     // CAMERA
     this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
-    this.camera.position.set(-4, 0, 2.8);
+    this.camera.position.set(-1, 0, 2.8);
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     // LIGHTS
     const light = new THREE.DirectionalLight(0xffffff);
@@ -74,6 +74,8 @@ export default class Blob {
       blob: null,
     }
     this.blobs = [];
+    this.blobSize = 1.0;
+    this.nextBlobSize = 0.2;
 
     // IPADS VARIABLES
     this.group = new THREE.Group();
@@ -87,6 +89,7 @@ export default class Blob {
     this.addIpads();
     this.addBlob();
     this.addMarching();
+    new Animation(this.camera, this.sphere, this.ipads, this.effect);
     this.resize();
     this.render();
     this.setupListeners();
@@ -116,20 +119,20 @@ export default class Blob {
       envMap: null,
     } );
     this.effect = new MarchingCubes(this.resolution, this.ballMaterial, true, true);
-    this.effect.position.set(1, 0, 0);
+    this.effect.position.set(-1, 0, 0);
     this.effect.enableUvs = false;
     this.effect.enableColors = false;
     this.effect.init(this.resolution);
     this.effect.isolation = 20;
 
     // this.mesh = new THREE.Mesh(this.effect.geometry, this.ballMaterial);
-    this.effect.scale.set(1.2, 1.2, 1.2);
+    this.effect.scale.set(this.nextBlobSize, this.nextBlobSize, this.nextBlobSize);
     this.effect.castShadow = true;
     this.effect.receiveShadow = true;
 
     this.scene.add(this.effect);
 
-    const numBlobs = 20;
+    const numBlobs = 15;
     
     for (let j = 0; j < numBlobs; j++) {
       this.blobs.push({
@@ -232,7 +235,6 @@ export default class Blob {
     this.sphere = new THREE.Mesh(this.geometries.blob, this.materials.blob);
     this.sphere.position.set(-1, 0, 0);
     this.scene.add(this.sphere);
-    new Animation(this.camera, this.sphere, this.ipads);
   }
 
   addIpads() {

@@ -11,8 +11,10 @@ export default class Animation {
         console.log(objects);
         this.target = objects[0];
         this.ipads = objects[1];
+        this.metaball = objects[2];
         this.camera = camera;
         this.firstStage();
+        this.secondStage();
     }
     
     firstStage() {
@@ -25,6 +27,7 @@ export default class Animation {
               scrub: 2,
               onEnterBack: () => {
                 changePosition(that.target.position, { x: -1 });
+                changePosition(that.metaball.position, { x: -1 });
                 changeSize(that.target.scale, { size: 1 });
                 changeSize(that.ipads[2].scale, { size: 0.000000001, duration: 0.1 });
                 changeSize(that.ipads[1].scale, { size: 0.000000001, duration: 0.1 });
@@ -41,6 +44,7 @@ export default class Animation {
               scrub: 2,
               onEnter: () => {
                 changePosition(that.target.position, { x: 0, duration: 2, ease: 'elastic.out(1, 0.7)' });
+                changePosition(that.metaball.position, { x: 0, duration: 2, ease: 'elastic.out(1, 0.7)' });
                 changeSize(that.target.scale, { size: 0.5 });
                 changeSize(that.ipads[0].scale, { size: 0.0008 });
                 changeSize(that.ipads[1].scale, { size: 0.0008 });
@@ -63,5 +67,32 @@ export default class Animation {
               },
             }
         });
+    }
+
+    secondStage(){
+      const that = this;
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: '#section-4',
+          start: 'top+=10px bottom',
+          end: 'bottom-=10px top',
+          scrub: 2,
+          onEnter: () => {
+            changeSize(that.target.scale, { size: 0.00001, duration: 2, ease: 'elastic.out(1.2, 0.7)' });
+            changeSize(that.metaball.scale, { size: 1.2 });
+          },
+          onLeave: () => {
+
+          },
+          onEnterBack: () => {
+            changeSize(that.target.scale, { size: 0.00001, duration: 2, ease: 'elastic.out(1.2, 0.7)' });
+            changeSize(that.metaball.scale, { size: 1.2 });
+          },
+          onLeaveBack: () => {
+            changeSize(that.target.scale, { size: 0.5, duration: 1 });
+            changeSize(that.metaball.scale, { size: 0.2, ease: 'elastic.out(1.2, 0.7)' });
+          },
+        }
+      });
     }
 }

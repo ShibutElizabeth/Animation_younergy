@@ -57116,7 +57116,8 @@ function changeSize(target, options) {
     x: options.size || 1,
     y: options.size || 1,
     z: options.size || 1,
-    duration: options.duration || 1
+    duration: options.duration || 1,
+    ease: options.ease || "none"
   });
 }
 },{"gsap":"../node_modules/gsap/index.js"}],"js/classes/Animation.class.js":[function(require,module,exports) {
@@ -57158,8 +57159,10 @@ var Animation = /*#__PURE__*/function () {
     console.log(objects);
     this.target = objects[0];
     this.ipads = objects[1];
+    this.metaball = objects[2];
     this.camera = camera;
     this.firstStage();
+    this.secondStage();
   }
 
   _createClass(Animation, [{
@@ -57175,6 +57178,9 @@ var Animation = /*#__PURE__*/function () {
           scrub: 2,
           onEnterBack: function onEnterBack() {
             (0, _changeState.changePosition)(that.target.position, {
+              x: -1
+            });
+            (0, _changeState.changePosition)(that.metaball.position, {
               x: -1
             });
             (0, _changeState.changeSize)(that.target.scale, {
@@ -57204,6 +57210,11 @@ var Animation = /*#__PURE__*/function () {
           scrub: 2,
           onEnter: function onEnter() {
             (0, _changeState.changePosition)(that.target.position, {
+              x: 0,
+              duration: 2,
+              ease: 'elastic.out(1, 0.7)'
+            });
+            (0, _changeState.changePosition)(that.metaball.position, {
               x: 0,
               duration: 2,
               ease: 'elastic.out(1, 0.7)'
@@ -57258,6 +57269,51 @@ var Animation = /*#__PURE__*/function () {
             (0, _changeState.changeSize)(that.ipads[0].scale, {
               size: 0.000000001,
               duration: 0.1
+            });
+          }
+        }
+      });
+    }
+  }, {
+    key: "secondStage",
+    value: function secondStage() {
+      var that = this;
+
+      _gsap.gsap.timeline({
+        scrollTrigger: {
+          trigger: '#section-4',
+          start: 'top+=10px bottom',
+          end: 'bottom-=10px top',
+          scrub: 2,
+          onEnter: function onEnter() {
+            (0, _changeState.changeSize)(that.target.scale, {
+              size: 0.00001,
+              duration: 2,
+              ease: 'elastic.out(1.2, 0.7)'
+            });
+            (0, _changeState.changeSize)(that.metaball.scale, {
+              size: 1.2
+            });
+          },
+          onLeave: function onLeave() {},
+          onEnterBack: function onEnterBack() {
+            (0, _changeState.changeSize)(that.target.scale, {
+              size: 0.00001,
+              duration: 2,
+              ease: 'elastic.out(1.2, 0.7)'
+            });
+            (0, _changeState.changeSize)(that.metaball.scale, {
+              size: 1.2
+            });
+          },
+          onLeaveBack: function onLeaveBack() {
+            (0, _changeState.changeSize)(that.target.scale, {
+              size: 0.5,
+              duration: 1
+            });
+            (0, _changeState.changeSize)(that.metaball.scale, {
+              size: 0.2,
+              ease: 'elastic.out(1.2, 0.7)'
             });
           }
         }
@@ -57723,8 +57779,8 @@ var Blob = /*#__PURE__*/function () {
     this.container.appendChild(this.renderer.domElement); // CAMERA
 
     this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
-    this.camera.position.set(-4, 0, 2.8);
-    this.controls = new _OrbitControls.OrbitControls(this.camera, this.renderer.domElement); // LIGHTS
+    this.camera.position.set(-1, 0, 2.8); // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // LIGHTS
 
     var light = new THREE.DirectionalLight(0xffffff);
     light.position.set(1.5, 0, 5);
@@ -57759,7 +57815,9 @@ var Blob = /*#__PURE__*/function () {
     this.geometries = {
       blob: null
     };
-    this.blobs = []; // IPADS VARIABLES
+    this.blobs = [];
+    this.blobSize = 1.0;
+    this.nextBlobSize = 0.2; // IPADS VARIABLES
 
     this.group = new THREE.Group();
     this.ipads = [];
@@ -57771,6 +57829,7 @@ var Blob = /*#__PURE__*/function () {
     this.addIpads();
     this.addBlob();
     this.addMarching();
+    new _Animation.default(this.camera, this.sphere, this.ipads, this.effect);
     this.resize();
     this.render();
     this.setupListeners();
@@ -57799,17 +57858,17 @@ var Blob = /*#__PURE__*/function () {
         envMap: null
       });
       this.effect = new _MarchingCubes.MarchingCubes(this.resolution, this.ballMaterial, true, true);
-      this.effect.position.set(1, 0, 0);
+      this.effect.position.set(-1, 0, 0);
       this.effect.enableUvs = false;
       this.effect.enableColors = false;
       this.effect.init(this.resolution);
       this.effect.isolation = 20; // this.mesh = new THREE.Mesh(this.effect.geometry, this.ballMaterial);
 
-      this.effect.scale.set(1.2, 1.2, 1.2);
+      this.effect.scale.set(this.nextBlobSize, this.nextBlobSize, this.nextBlobSize);
       this.effect.castShadow = true;
       this.effect.receiveShadow = true;
       this.scene.add(this.effect);
-      var numBlobs = 20;
+      var numBlobs = 15;
 
       for (var j = 0; j < numBlobs; j++) {
         this.blobs.push({
@@ -57911,7 +57970,6 @@ var Blob = /*#__PURE__*/function () {
       this.sphere = new THREE.Mesh(this.geometries.blob, this.materials.blob);
       this.sphere.position.set(-1, 0, 0);
       this.scene.add(this.sphere);
-      new _Animation.default(this.camera, this.sphere, this.ipads);
     }
   }, {
     key: "addIpads",
