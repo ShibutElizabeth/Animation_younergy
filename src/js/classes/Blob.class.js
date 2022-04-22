@@ -7,6 +7,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes';
 import fragmentShader from '../../shaders/fragment.glsl';
 import vertexShader from '../../shaders/vertex.glsl';
+import fragmentBall from '../../shaders/fragment-ball.glsl';
+import vertexBall from '../../shaders/vertex-ball.glsl';
 import Animation from './Animation.class';
 import { dumpObject, randomInRange } from '../utils/utils';
 import noise from '../utils/perlin';
@@ -62,11 +64,17 @@ export default class Blob {
     this.scene.add(ambientLight);
 
     // MAIN VARIABLES
+    this.mouse = {
+      moved: false,
+      x: 0,
+      y: 0,
+    };
     this.time = 0;
     this.color = new THREE.Vector3(0.94, 0.44, 0.17);
     this.isPlaying = true;
     this.materials = {
       blob: null,
+      metaball: null,
       ipadMetal: null,
       ipadScreen: null,
     };
@@ -99,7 +107,7 @@ export default class Blob {
   addMarching() {
     // MARCHING CUBES
 
-    this.resolution = 40;
+    this.resolution = 50;
 
     const texture = new THREE.TextureLoader().load( "js/classes/tex.jpg" );
     texture.wrapS = THREE.RepeatWrapping;
@@ -118,7 +126,8 @@ export default class Blob {
       normalScale: new THREE.Vector2(3, 3),
       envMap: null,
     } );
-    this.effect = new MarchingCubes(this.resolution, this.ballMaterial, true, true);
+    
+    this.effect = new MarchingCubes(this.resolution, this.materials.metaball, true, true);
     this.effect.position.set(-1, 0, 0);
     this.effect.enableUvs = false;
     this.effect.enableColors = false;
@@ -164,7 +173,6 @@ export default class Blob {
       const subtract = 10 + 20 * (.5 + .5 * noise.perlin3(s * tmpVector.x + 1.2 * offset, s * tmpVector.y + .8 * offset, s * tmpVector.z + .9 * offset));
       effect.addBall(tmpVector.x + .5, tmpVector.y + .5, tmpVector.z + .5, strength, subtract);
     });
-
     // this.mesh.geometry.dispose();
     // this.mesh.geometry = effect.geometry;
 
@@ -175,11 +183,6 @@ export default class Blob {
   }
 
   setupListeners() {
-    this.mouse = {
-      moved: false,
-      x: 0,
-      y: 0,
-    };
     window.addEventListener("resize", this.resize.bind(this));
     window.addEventListener("mousemove", this.mousemove.bind(this));
   }
@@ -196,6 +199,8 @@ export default class Blob {
     const {
       koeff
     } = this.settings;
+    const mouseX = this.mouse.x;
+    const mouseY = this.mouse.y;
 
     // BLOB material
     this.materials.blob =
@@ -214,6 +219,12 @@ export default class Blob {
           uColor: {
             value: new THREE.Vector3(0.9, 0.9, 0.8)
           },
+          mouseX: {
+            value: mouseX,
+          },
+          mouseY: {
+            value: mouseY,
+          }
         },
         vertexShader: vertexShader,
         fragmentShader: fragmentShader,
@@ -227,6 +238,28 @@ export default class Blob {
         roughness: 1,
         reflectivity: 1,
         flatShading: true,
+      });
+
+    // METABALL material
+    this.materials.metaball =
+      new THREE.ShaderMaterial({
+        extensions: {
+          derivatives: "#extension GL_OES_standard_derivatives : enable"
+        },
+        side: THREE.DoubleSide,
+        uniforms: {
+          time: {
+            value: 0
+          },
+          koeff: {
+            value: 1.5* koeff,
+          },
+          uColor: {
+            value: new THREE.Vector3(0.94, 0.44, 0.17)
+          },
+        },
+        vertexShader: vertexBall,
+        fragmentShader: fragmentBall,
       });
   }
 
@@ -301,6 +334,9 @@ export default class Blob {
     // set new mouse coords
     this.mouse.x = event.x;
     this.mouse.y = event.y;
+
+    this.materials.blob.uniforms.mouseX.value = this.mouse.x;
+    this.materials.blob.uniforms.mouseY.value = this.mouse.y;
   }
 
   render() {

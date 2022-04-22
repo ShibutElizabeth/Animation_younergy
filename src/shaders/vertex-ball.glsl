@@ -1,6 +1,4 @@
 uniform float time;
-uniform float mouseX;
-uniform float mouseY;
 uniform float koeff;
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -85,8 +83,8 @@ float cnoise(vec3 P){
 }
 
 float distored_pos(vec3 p){
-    float n = cnoise(p * koeff + vec3(time)); // + 0.01*vec3(mouseX, mouseY, 0));
-    vNoise = n; // cnoise(p * koeff + vec3(time) );
+    float n = cnoise(p * koeff + vec3(time));
+    vNoise = n;
     return n;
 }
 
@@ -98,7 +96,7 @@ vec3 orthogonal(vec3 n){
 
 void main(){
     vUv = uv;
-    vec3 displacedposition = position + 0.1*normal*distored_pos(position);
+    vec3 displacedposition = position + 0.1*normal*position;
 
     vec3 eps = vec3(0.001, 0., 0.);
     vec3 tangent = orthogonal(normal);
@@ -113,7 +111,7 @@ void main(){
     vec3 displacedBiTangent = displacedN2 - displacedposition;
 
     vec3 displacedNormal = normalize(cross(displacedTangent, displacedBiTangent));
-    vNormal = displacedNormal;
+    // vNormal = displacedNormal;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(displacedposition, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
