@@ -57903,8 +57903,8 @@ var Blob = /*#__PURE__*/function () {
         tmpVector.z = r * Math.cos(blob.theta);
 
         if (idx >= blobs.length - 2) {
-          tmpVector.x = r + 0.0001 * (_this.mouse.x - _this.width / 2);
-          tmpVector.y = r - 0.0001 * (_this.mouse.y - _this.height / 2);
+          tmpVector.x = r + 0.0007 * (_this.mouse.x - _this.width / 2);
+          tmpVector.y = r - 0.0007 * (_this.mouse.y - _this.height / 2);
         }
 
         var s = 3.0;

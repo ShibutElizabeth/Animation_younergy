@@ -158,8 +158,8 @@ export default class Blob {
       tmpVector.y = r * Math.sin(blob.phi);
       tmpVector.z = r * Math.cos(blob.theta);
       if(idx >= blobs.length - 2) {
-        tmpVector.x = r + 0.0001*(this.mouse.x - this.width/2);
-        tmpVector.y = r - 0.0001*(this.mouse.y - this.height/2);
+        tmpVector.x = r + 0.0007*(this.mouse.x - this.width/2);
+        tmpVector.y = r - 0.0007*(this.mouse.y - this.height/2);
       }
       const s = 3.0;
       const offset = Math.cos(t * TAU) * s;
