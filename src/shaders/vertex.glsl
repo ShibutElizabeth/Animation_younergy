@@ -1,7 +1,7 @@
 uniform float time;
 uniform float mouseX;
 uniform float mouseY;
-uniform float koeff;
+uniform float coefficient;
 varying vec2 vUv;
 varying vec3 vPosition;
 uniform vec2 pixels;
@@ -85,8 +85,8 @@ float cnoise(vec3 P){
 }
 
 float distored_pos(vec3 p){
-    float n = cnoise(p * koeff + vec3(time)); // + 0.01*vec3(mouseX, mouseY, 0));
-    vNoise = n; // cnoise(p * koeff + vec3(time) );
+    float n = cnoise(p * coefficient + vec3(time)); // + 0.01*vec3(mouseX, mouseY, 0));
+    vNoise = n; // cnoise(p * coefficient + vec3(time) );
     return n;
 }
 

@@ -8,13 +8,12 @@ import noise from '../utils/perlin';
 export default class Metaball{
     constructor(){
         this.size = 0.2;
-        this.resolution = 50;
+        this.resolution = 60;
         this.numberOfBlobs = 15;
         this.blobs = [];
         this.setMaterial();
         this.setupEffect(this.resolution, this.material, this.size);
         this.setupBlobs(this.numberOfBlobs);
-        this.geometry;
     }
 
     setMaterial(){
@@ -73,19 +72,34 @@ export default class Metaball{
         const t = time / 6;
         const tmpVector = new THREE.Vector3();
         this.blobs.forEach((blob, idx)=> {
-          const r = radius * Math.cos(t * TAU + blob.offset);
-          tmpVector.x = r * Math.sin(blob.theta) * Math.cos(blob.phi);
-          tmpVector.y = r * Math.sin(blob.phi);
-          tmpVector.z = r * Math.cos(blob.theta);
-          if(idx >= this.blobs.length - 2) {
-            tmpVector.x = r + 0.0007*(mouse.x - width/2);
-            tmpVector.y = r - 0.0007*(mouse.y - height/2);
-          }
-          const s = 3.0;
-          const offset = Math.cos(t * TAU) * s;
-          const strength = 0.1 + 4 * (0.5 + .5 * noise.perlin3(s * tmpVector.x + offset, s * tmpVector.y + .5 * offset, s * tmpVector.z + .4 * offset));
-          const subtract = 10 + 20 * (.5 + .5 * noise.perlin3(s * tmpVector.x + 1.2 * offset, s * tmpVector.y + .8 * offset, s * tmpVector.z + .9 * offset));
-          effect.addBall(tmpVector.x + .5, tmpVector.y + .5, tmpVector.z + .5, strength, subtract);
+            // if(idx === 0){
+                
+            //     const r = radius;
+            //     tmpVector.x = r;
+            //     tmpVector.y = r;
+            //     tmpVector.z = r;
+            //     const s = 3.0;
+            //     const offset = Math.cos(t * TAU) * s;
+            //     const strength = 0.1 + 4 * (0.5 + .5 * noise.perlin3(s * tmpVector.x + offset, s * tmpVector.y + .5 * offset, s * tmpVector.z + .4 * offset));
+            //     const subtract = 10 + 20 * (.5 + .5 * noise.perlin3(s * tmpVector.x + 1.2 * offset, s * tmpVector.y + .8 * offset, s * tmpVector.z + .9 * offset));
+            //     effect.addBall(tmpVector.x + .5, tmpVector.y + .5, tmpVector.z + .5, strength, subtract);
+            // } else {
+                const r = radius * Math.cos(t * TAU + blob.offset);
+                tmpVector.x = r * Math.sin(blob.theta) * Math.cos(blob.phi);
+                tmpVector.y = r * Math.sin(blob.phi);
+                tmpVector.z = r * Math.cos(blob.theta);
+              //   if(idx >= this.blobs.length - 2 && mouse.x > width/2) {
+              //     tmpVector.x = r + 0.0007*(mouse.x - width/2);
+              //     tmpVector.y = r - 0.0007*(mouse.y - height/2);
+              //   }
+                
+                const s = 3.0;
+                const offset = Math.cos(t * TAU) * s;
+                const strength = 0.1 + 4 * (0.5 + .5 * noise.perlin3(s * tmpVector.x + offset, s * tmpVector.y + .5 * offset, s * tmpVector.z + .4 * offset));
+                const subtract = 10 + 20 * (.5 + .5 * noise.perlin3(s * tmpVector.x + 1.2 * offset, s * tmpVector.y + .8 * offset, s * tmpVector.z + .9 * offset));
+                effect.addBall(tmpVector.x + .5, tmpVector.y + .5, tmpVector.z + .5, strength, subtract);
+            // }
+          
         });
         effect.material.opacity = 1 * time / 8;
     }

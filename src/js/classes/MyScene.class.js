@@ -6,6 +6,7 @@ import Blob from './Blob.class';
 import Metaball from './Metaball.class';
 import Ipads from './Ipads.class';
 import Animation from './Animation.class';
+import Text3d from './Text.class';
 
 export default class MyScene {
   constructor(options) {
@@ -71,6 +72,7 @@ export default class MyScene {
         blob: new Blob(),
         metaball: new Metaball(),
         ipads: new Ipads(),
+        // text: new Text3d(),
     }
     this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh);
     

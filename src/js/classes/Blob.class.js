@@ -6,12 +6,13 @@ import vertexShader from '../../shaders/vertex.glsl';
 export default class Blob {
   constructor(){
     this.size = 1.0;
+    this.coefficient = 2.2;
     this.setupMaterial();
     this.setupMesh();
   }
 
   setupMaterial(){
-    const koeff = 2.2;
+    const k = this.coefficient;
     const color = new THREE.Vector3(0.91, 0.44, 0.17);
     this.material = new THREE.ShaderMaterial({
       extensions: {
@@ -22,8 +23,8 @@ export default class Blob {
         time: {
           value: 0
         },
-        koeff: {
-          value: koeff
+        coefficient: {
+          value: k
         },
         uColor: {
           value: color,
@@ -56,5 +57,9 @@ export default class Blob {
 
   updateMesh(time){
     this.material.uniforms.time.value = time;
+  }
+
+  updateCoefficient(k){
+    this.material.uniforms.coefficient.value = k;
   }
 }
