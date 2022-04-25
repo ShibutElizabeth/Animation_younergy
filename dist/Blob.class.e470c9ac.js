@@ -57831,7 +57831,7 @@ var Blob = /*#__PURE__*/function () {
     };
     this.blobs = [];
     this.blobSize = 1.0;
-    this.nextBlobSize = 0.2; // IPADS VARIABLES
+    this.metaballSize = 0.2; // IPADS VARIABLES
 
     this.group = new THREE.Group();
     this.ipads = [];
@@ -57854,12 +57854,6 @@ var Blob = /*#__PURE__*/function () {
     value: function addMarching() {
       // MARCHING CUBES
       this.resolution = 50;
-      var texture = new THREE.TextureLoader().load("js/classes/tex.jpg");
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(1, 1); // console.log(texture)
-      // this.scene.fog.color = 0xffd500;
-
       this.ballMaterial = new THREE.MeshPhysicalMaterial({
         clearcoat: 1.0,
         clearcoatRoughness: 0.1,
@@ -57867,18 +57861,15 @@ var Blob = /*#__PURE__*/function () {
         color: 0xfe4c00,
         emissive: 0xfe4c00,
         reflectivity: 1.0,
-        // normalMap: texture,
-        normalScale: new THREE.Vector2(3, 3),
-        envMap: null
+        normalScale: new THREE.Vector2(3, 3)
       });
       this.effect = new _MarchingCubes.MarchingCubes(this.resolution, this.materials.metaball, true, true);
-      this.effect.position.set(-1, 0, 0);
-      this.effect.enableUvs = false;
-      this.effect.enableColors = false;
-      this.effect.init(this.resolution);
-      this.effect.isolation = 20; // this.mesh = new THREE.Mesh(this.effect.geometry, this.ballMaterial);
+      this.effect.position.set(-1, 0, 0); // this.effect.enableUvs = false;
+      // this.effect.enableColors = false;
 
-      this.effect.scale.set(this.nextBlobSize, this.nextBlobSize, this.nextBlobSize);
+      this.effect.init(this.resolution);
+      this.effect.isolation = 20;
+      this.effect.scale.set(this.metaballSize, this.metaballSize, this.metaballSize);
       this.effect.castShadow = true;
       this.effect.receiveShadow = true;
       this.scene.add(this.effect);
@@ -57891,12 +57882,12 @@ var Blob = /*#__PURE__*/function () {
           offset: (0, _utils.randomInRange)(0, 2 * Math.PI)
         });
       }
-
-      console.log(this.blobs);
     }
   }, {
     key: "updateCubes",
     value: function updateCubes(effect, TIME, blobs) {
+      var _this = this;
+
       effect.isolation = 500;
       effect.reset();
       var PI = Math.PI;
@@ -57905,11 +57896,17 @@ var Blob = /*#__PURE__*/function () {
       var time = TIME % 6;
       var t = time / 6;
       var tmpVector = new THREE.Vector3();
-      blobs.forEach(function (blob) {
+      blobs.forEach(function (blob, idx) {
         var r = radius * Math.cos(t * TAU + blob.offset);
         tmpVector.x = r * Math.sin(blob.theta) * Math.cos(blob.phi);
-        tmpVector.y = r * Math.sin(blob.theta) * Math.sin(blob.phi);
+        tmpVector.y = r * Math.sin(blob.phi);
         tmpVector.z = r * Math.cos(blob.theta);
+
+        if (idx >= blobs.length - 2) {
+          tmpVector.x = r + 0.0001 * (_this.mouse.x - _this.width / 2);
+          tmpVector.y = r - 0.0001 * (_this.mouse.y - _this.height / 2);
+        }
+
         var s = 3.0;
         var offset = Math.cos(t * TAU) * s;
 
@@ -57918,11 +57915,8 @@ var Blob = /*#__PURE__*/function () {
         var subtract = 10 + 20 * (.5 + .5 * _perlin.default.perlin3(s * tmpVector.x + 1.2 * offset, s * tmpVector.y + .8 * offset, s * tmpVector.z + .9 * offset));
 
         effect.addBall(tmpVector.x + .5, tmpVector.y + .5, tmpVector.z + .5, strength, subtract);
-      }); // this.mesh.geometry.dispose();
-      // this.mesh.geometry = effect.geometry;
-
-      effect.material.opacity = 1 * time / 8; // effect.rotation.z = t * TAU;
-      // effect.rotation.x = t * TAU;
+      });
+      effect.material.opacity = 1 * time / 8;
     }
   }, {
     key: "setupListeners",
@@ -58011,7 +58005,7 @@ var Blob = /*#__PURE__*/function () {
   }, {
     key: "addIpads",
     value: function addIpads() {
-      var _this = this;
+      var _this2 = this;
 
       var link = './././scene.gltf';
       var loader = new _GLTFLoader.GLTFLoader();
@@ -58019,9 +58013,9 @@ var Blob = /*#__PURE__*/function () {
       loader.load(link, function (gltf) {
         var root = gltf.scene;
 
-        _this.ipads.push(root.getObjectByName('Empty_Object_6'), root.getObjectByName('Empty_Object_4'), root.getObjectByName('Empty_Object_7'));
+        _this2.ipads.push(root.getObjectByName('Empty_Object_6'), root.getObjectByName('Empty_Object_4'), root.getObjectByName('Empty_Object_7'));
 
-        _this.ipads.forEach(function (ipad, idx) {
+        _this2.ipads.forEach(function (ipad, idx) {
           // set scale & position
           ipad.scale.set(0, 0, 0);
           ipad.rotation.set(0, 0, 0);
@@ -58029,10 +58023,10 @@ var Blob = /*#__PURE__*/function () {
           ipad.rotateY((idx - 1) * Math.PI / 2); // add ipad material
 
           ipad["children"].forEach(function (child) {
-            child["material"] = _this.materials.ipadMetal;
+            child["material"] = _this2.materials.ipadMetal;
           });
 
-          _this.group.add(ipad);
+          _this2.group.add(ipad);
         }); // console.log(this.dumpObject(root).join('\n'));
 
       });
@@ -58041,7 +58035,7 @@ var Blob = /*#__PURE__*/function () {
   }, {
     key: "mousemove",
     value: function mousemove(event) {
-      var _this2 = this;
+      var _this3 = this;
 
       // rotate ipads on mousemove
       if (!this.isRotating) {
@@ -58058,7 +58052,7 @@ var Blob = /*#__PURE__*/function () {
         });
 
         setTimeout(function () {
-          _this2.isRotating = false;
+          _this3.isRotating = false;
         }, 1000);
       } // rotate blob on mousemove
 
@@ -58152,7 +58146,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56136" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61918" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

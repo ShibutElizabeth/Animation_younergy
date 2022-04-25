@@ -83,7 +83,7 @@ export default class Blob {
     }
     this.blobs = [];
     this.blobSize = 1.0;
-    this.nextBlobSize = 0.2;
+    this.metaballSize = 0.2;
 
     // IPADS VARIABLES
     this.group = new THREE.Group();
@@ -109,12 +109,6 @@ export default class Blob {
 
     this.resolution = 50;
 
-    const texture = new THREE.TextureLoader().load( "js/classes/tex.jpg" );
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set( 1, 1 );
-    // console.log(texture)
-    // this.scene.fog.color = 0xffd500;
     this.ballMaterial =  new THREE.MeshPhysicalMaterial( { 
       clearcoat: 1.0,
       clearcoatRoughness: 0.1,
@@ -122,20 +116,17 @@ export default class Blob {
       color: 0xfe4c00,
       emissive: 0xfe4c00,
       reflectivity: 1.0,
-      // normalMap: texture,
       normalScale: new THREE.Vector2(3, 3),
-      envMap: null,
     } );
     
     this.effect = new MarchingCubes(this.resolution, this.materials.metaball, true, true);
     this.effect.position.set(-1, 0, 0);
-    this.effect.enableUvs = false;
-    this.effect.enableColors = false;
+    // this.effect.enableUvs = false;
+    // this.effect.enableColors = false;
     this.effect.init(this.resolution);
     this.effect.isolation = 20;
 
-    // this.mesh = new THREE.Mesh(this.effect.geometry, this.ballMaterial);
-    this.effect.scale.set(this.nextBlobSize, this.nextBlobSize, this.nextBlobSize);
+    this.effect.scale.set(this.metaballSize, this.metaballSize, this.metaballSize);
     this.effect.castShadow = true;
     this.effect.receiveShadow = true;
 
@@ -150,7 +141,6 @@ export default class Blob {
         offset: randomInRange(0, 2 * Math.PI),
       });
     }
-    console.log(this.blobs);
   }
 
   updateCubes(effect, TIME, blobs) {
@@ -162,24 +152,22 @@ export default class Blob {
     const time = TIME % 6;
     const t = time / 6;
     const tmpVector = new THREE.Vector3();
-    blobs.forEach((blob)=> {
+    blobs.forEach((blob, idx)=> {
       const r = radius * Math.cos(t * TAU + blob.offset);
       tmpVector.x = r * Math.sin(blob.theta) * Math.cos(blob.phi);
-      tmpVector.y = r * Math.sin(blob.theta) * Math.sin(blob.phi);
+      tmpVector.y = r * Math.sin(blob.phi);
       tmpVector.z = r * Math.cos(blob.theta);
+      if(idx >= blobs.length - 2) {
+        tmpVector.x = r + 0.0001*(this.mouse.x - this.width/2);
+        tmpVector.y = r - 0.0001*(this.mouse.y - this.height/2);
+      }
       const s = 3.0;
       const offset = Math.cos(t * TAU) * s;
       const strength = 0.1 + 4 * (0.5 + .5 * noise.perlin3(s * tmpVector.x + offset, s * tmpVector.y + .5 * offset, s * tmpVector.z + .4 * offset));
       const subtract = 10 + 20 * (.5 + .5 * noise.perlin3(s * tmpVector.x + 1.2 * offset, s * tmpVector.y + .8 * offset, s * tmpVector.z + .9 * offset));
       effect.addBall(tmpVector.x + .5, tmpVector.y + .5, tmpVector.z + .5, strength, subtract);
     });
-    // this.mesh.geometry.dispose();
-    // this.mesh.geometry = effect.geometry;
-
     effect.material.opacity = 1 * time / 8;
-    // effect.rotation.z = t * TAU;
-    // effect.rotation.x = t * TAU;
-
   }
 
   setupListeners() {
