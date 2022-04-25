@@ -57323,6 +57323,34 @@ var Animation = /*#__PURE__*/function () {
         }
       });
     }
+  }, {
+    key: "thirdStage",
+    value: function thirdStage() {
+      var that = this;
+
+      _gsap.gsap.timeline({
+        scrollTrigger: {
+          trigger: '#section-5',
+          start: 'top+=10px bottom',
+          end: 'bottom-=10px top',
+          scrub: 2 // onEnter: () => {
+          //   changeSize(that.target.scale, { size: 0.00001, duration: 2, ease: 'elastic.out(1.2, 0.7)' });
+          //   changeSize(that.metaball.scale, { size: 1.2 });
+          // },
+          // onLeave: () => {
+          // },
+          // onEnterBack: () => {
+          //   changeSize(that.target.scale, { size: 0.00001, duration: 2, ease: 'elastic.out(1.2, 0.7)' });
+          //   changeSize(that.metaball.scale, { size: 1.2 });
+          // },
+          // onLeaveBack: () => {
+          //   changeSize(that.target.scale, { size: 0.5, duration: 1 });
+          //   changeSize(that.metaball.scale, { size: 0.2, ease: 'elastic.out(1.2, 0.7)' });
+          // },
+
+        }
+      });
+    }
   }]);
 
   return Animation;
@@ -57864,9 +57892,7 @@ var Blob = /*#__PURE__*/function () {
         normalScale: new THREE.Vector2(3, 3)
       });
       this.effect = new _MarchingCubes.MarchingCubes(this.resolution, this.materials.metaball, true, true);
-      this.effect.position.set(-1, 0, 0); // this.effect.enableUvs = false;
-      // this.effect.enableColors = false;
-
+      this.effect.position.set(-1, 0, 0);
       this.effect.init(this.resolution);
       this.effect.isolation = 20;
       this.effect.scale.set(this.metaballSize, this.metaballSize, this.metaballSize);
@@ -58146,7 +58172,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61918" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64144" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
