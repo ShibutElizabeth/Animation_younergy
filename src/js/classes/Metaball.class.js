@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes';
-import fragmentBall from '../../shaders/fragment-ball.glsl';
-import vertexBall from '../../shaders/vertex-ball.glsl';
+import fragmentShader from '../../shaders/fragment-metaball.glsl';
+import vertexShader from '../../shaders/vertex-metaball.glsl';
 import { randomInRange } from '../utils/utils';
 import noise from '../utils/perlin';
 
@@ -34,8 +34,8 @@ export default class Metaball{
                 value: new THREE.Vector3(0.94, 0.44, 0.17)
               },
             },
-            vertexShader: vertexBall,
-            fragmentShader: fragmentBall,
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
         });
     }
 

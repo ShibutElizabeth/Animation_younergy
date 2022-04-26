@@ -1,7 +1,7 @@
 import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
-import fragmentShader from '../../shaders/fragment.glsl';
-import vertexShader from '../../shaders/vertex.glsl';
+import fragmentShader from '../../shaders/fragment-blob.glsl';
+import vertexShader from '../../shaders/vertex-blob.glsl';
 
 export default class Blob {
   constructor(){
@@ -62,4 +62,5 @@ export default class Blob {
   updateCoefficient(k){
     this.material.uniforms.coefficient.value = k;
   }
+
 }

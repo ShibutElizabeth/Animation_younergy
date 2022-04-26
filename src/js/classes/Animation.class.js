@@ -89,7 +89,7 @@ export default class Animation {
           onEnter: () => {
             changeCoefficient(1);
             changeSize(that.blob.scale, { size: 0.01, duration: 2 });
-            changeSize(that.metaball.scale, { size: 1.2 });
+            changeSize(that.metaball.scale, { size: 1.2, duration: 2 });
           },
           onLeave: () => {
 
@@ -97,12 +97,12 @@ export default class Animation {
           onEnterBack: () => {
             changeCoefficient(1);
             changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1, });
-            changeSize(that.metaball.scale, { size: 1.2 });
+            changeSize(that.metaball.scale, { size: 1.2, duration: 1 });
           },
           onLeaveBack: () => {
             changeCoefficient(2.2);
-            changeSize(that.blob.scale, { size: 0.5, duration: 1 });
-            changeSize(that.metaball.scale, { size: 0.2, ease: 'elastic.out(1.2, 0.7)' });
+            changeSize(that.blob.scale, { size: 0.5, duration: 2 });
+            changeSize(that.metaball.scale, { size: 0.2, duration: 1, });
           },
         }
       });
@@ -172,7 +172,7 @@ export default class Animation {
           trigger: '#section-10',
           start: 'top+=10px bottom',
           end: 'bottom-=10px top',
-          scrub: 2,
+          scrub: 1,
           onEnter: () => {
             changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1 });
             changePosition(that.blob.position, { x: 0, y: 0, duration: 2 });
@@ -194,6 +194,30 @@ export default class Animation {
           // },
         }
       });
-      
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: '#section-11',
+          start: 'top+=10px bottom',
+          end: 'bottom-=10px top',
+          scrub: 1,
+          onEnter: () => {
+            
+          },
+          onLeave: () => {
+            // changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1, });
+            
+          },
+          // onEnterBack: () => {
+          //   changeSize(that.blob.scale, { size: 0.25, duration: 1 });
+          //   changePosition(that.blob.position, { x: -0.6, y: 0.5, duration: 2 });
+          //   changePosition(that.metaball.position, { x: 0.3, y: -0.2, duration: 2 });
+          // },
+          // onLeaveBack: () => {
+          //   // changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1, });
+          //   changePosition(that.blob.position, { x: 0, y: 0, duration: 2 });
+          //   changePosition(that.metaball.position, { x: 0, y: 0, duration: 2 });
+          // },
+        }
+      });
     }
 }
