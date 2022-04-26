@@ -6,13 +6,6 @@ import Blob from './Blob.class';
 import Metaball from './Metaball.class';
 import Ipads from './Ipads.class';
 import Animation from './Animation.class';
-import Text3d from './Text.class';
-import { MeshStandardMaterial } from 'three';
-import fragmentShader from '../../shaders/fragment-wireframe.glsl';
-import vertexShader from '../../shaders/vertex-wireframe.glsl';
-import { Vector2 } from 'three';
-import { Vector3 } from 'three';
-import { LineBasicMaterial } from 'three';
 
 export default class MyScene {
   constructor(options) {
@@ -78,61 +71,14 @@ export default class MyScene {
         blob: new Blob(),
         metaball: new Metaball(),
         ipads: new Ipads(),
-        // text: new Text3d(),
     }
     this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh);
     
     // METHODS
     new Animation(this.camera, this.objects);
-    // this.addWF();
     this.resize();
     this.render();
     this.setupListeners();
-  }
-
-  addWF(){
-      const geometry = new THREE.SphereGeometry(1, 10, 10);
-      const material = new THREE.MeshBasicMaterial({ 
-          color: 0x888888, 
-          wireframe: true, 
-          wireframeLinewidth: 3.0, 
-        });
-        const s = new THREE.Mesh(geometry, material);
-        s.position.set(-1.5, 0,2);
-        this.scene.add(s);
-
-        // const material2 = new THREE.ShaderMaterial( {
-
-        //     uniforms: { 
-        //         thickness: { 
-        //             value: 0
-        //         },
-        //         center: {
-        //             value: new Vector3(-1.5, 0.0, 0.0),
-        //         }
-        //     },
-        //     vertexShader: vertexShader,
-        //     fragmentShader: fragmentShader,
-        //     side: THREE.DoubleSide,
-        //     alphaToCoverage: true // only works when WebGLRenderer's "antialias" is set to "true"
-
-        // } );
-        // material2.extensions.derivatives = true;
-
-        // const mesh2 = new THREE.Mesh( geometry, material2 );
-        // mesh2.position.set( -1.5, 0, 0 );
-
-        // this.scene.add( mesh2 );
-        // var geo = new THREE.EdgesGeometry( geometry ); // or WireframeGeometry( geometry )
-
-        // var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 5 } );
-        
-        // var wireframe = new THREE.LineSegments( geo, mat );
-//         const edges = new THREE.EdgesGeometry( geometry );
-// const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 4.0 } ) );
-        
-//         this.scene.add( line );
-//         console.log(line.material)
   }
 
   updateObjects(time){
