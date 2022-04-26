@@ -13,6 +13,7 @@ export default class Animation {
       this.ipads = objects.ipads.ipads;
       this.metaball = objects.metaball.mesh;
       this.camera = camera;
+      this.timeline = gsap.timeline();
       this.firstStage();
       this.secondStage();
       this.thirdStage();

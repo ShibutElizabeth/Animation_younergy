@@ -6,6 +6,7 @@ import Blob from './Blob.class';
 import Metaball from './Metaball.class';
 import Ipads from './Ipads.class';
 import Animation from './Animation.class';
+import Grid from './Grid.class';
 
 export default class MyScene {
   constructor(options) {
@@ -71,8 +72,10 @@ export default class MyScene {
         blob: new Blob(),
         metaball: new Metaball(),
         ipads: new Ipads(),
+        grid: new Grid(),
     }
-    this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh);
+    
+    this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh, this.objects.grid.group);
     
     // METHODS
     new Animation(this.camera, this.objects);
