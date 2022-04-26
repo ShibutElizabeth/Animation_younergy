@@ -8,7 +8,7 @@ import noise from '../utils/perlin';
 export default class Metaball{
     constructor(){
         this.size = 0.2;
-        this.resolution = 60;
+        this.resolution = 50;
         this.numberOfBlobs = 15;
         this.blobs = [];
         this.setMaterial();

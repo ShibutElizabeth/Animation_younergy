@@ -26,6 +26,7 @@ export default class Grid {
         this.mesh2.customDepthMaterial = this.getDepthMaterial2();
         this.group = new THREE.Group();
         this.group.add(this.mesh1, this.mesh2);
+        this.group.scale.set(0, 0, 0);
         this.group.rotateY(Math.PI/3)
     }
 
