@@ -20,6 +20,15 @@ export default class Animation {
       this.secondStage();
       this.thirdStage();
       this.fourthStage();
+      this.getProgress();
+    }
+
+    getProgress(){
+      ScrollTrigger.create({
+        onUpdate({progress, direction, isActive}) {
+          console.log((progress*100).toFixed());
+        }
+      })
     }
 
     firstStage() {
