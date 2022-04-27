@@ -110,7 +110,10 @@ export default class MyScene {
         delta = (event.x -  this.width/2)*0.001;
     } else if(this.animation.stage === 1){
         delta = (event.x -  this.width/2)*0.001 - 0.4;
+    } else{
+        delta = 0.45;
     } 
+
     // rotate ipads on mousemove
     this.objects.ipads.updateRotation(direction);
 

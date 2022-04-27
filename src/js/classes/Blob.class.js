@@ -47,17 +47,7 @@ export default class Blob {
   updateRotation(mouse, event, delta){
     this.mesh.rotateY(-1 * (mouse.x - event.x) / 1000);
     this.mesh.rotateX(-1 * (mouse.y - event.y) / 1000);
-    // const width = window.innerWidth;
-    // if(stage === 0){
-    //   const deltaX = (event.x -  width/2)*0.001;
-    //   this.material.uniforms.delta.value = deltaX;
-    // } else if(stage === 1){
-    //   const deltaX = (event.x -  width/2)*0.001 - 0.4;
-    //   this.material.uniforms.delta.value = deltaX;
-    // } else {
     this.material.uniforms.delta.value = delta;
-
-    
   }
 
   updateMesh(time){
