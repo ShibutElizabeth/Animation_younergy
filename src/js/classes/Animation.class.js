@@ -14,13 +14,14 @@ export default class Animation {
       this.metaball = objects.metaball.mesh;
       this.grid = objects.grid.group;
       this.camera = camera;
+      this.stage = 0;
       this.timeline = gsap.timeline();
       this.firstStage();
       this.secondStage();
       this.thirdStage();
       this.fourthStage();
     }
-    
+
     firstStage() {
       const that = this;
       gsap.timeline({
@@ -36,6 +37,7 @@ export default class Animation {
             changeSize(that.ipads[2].scale, { size: 0.000000001, duration: 0.1 });
             changeSize(that.ipads[1].scale, { size: 0.000000001, duration: 0.1 });
             changeSize(that.ipads[0].scale, { size: 0.000000001, duration: 0.1 });
+            that.stage = 0;
           },
         }
       });
@@ -53,6 +55,7 @@ export default class Animation {
             changeSize(that.ipads[0].scale, { size: 0.0008 });
             changeSize(that.ipads[1].scale, { size: 0.0008 });
             changeSize(that.ipads[2].scale, { size: 0.0008 });
+            that.stage = 1;
           },
           onLeave: () => {
             changeSize(that.ipads[2].scale, { size: 0.000000001, duration: 0.4 });
@@ -63,6 +66,7 @@ export default class Animation {
             changeSize(that.ipads[0].scale, { size: 0.0008 });
             changeSize(that.ipads[1].scale, { size: 0.0008 });
             changeSize(that.ipads[2].scale, { size: 0.0008 });
+            that.stage = 1;
           },
           onLeaveBack: () => {
             changeSize(that.ipads[2].scale, { size: 0.000000001, duration: 0.4 });
@@ -92,6 +96,7 @@ export default class Animation {
             changeCoefficient(1);
             changeSize(that.blob.scale, { size: 0.01, duration: 2 });
             changeSize(that.metaball.scale, { size: 1.2, duration: 2 });
+            that.stage = 2;
           },
           onLeave: () => {
 
@@ -100,6 +105,7 @@ export default class Animation {
             changeCoefficient(1);
             changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1, });
             changeSize(that.metaball.scale, { size: 1.2, duration: 1 });
+            that.stage = 2;
           },
           onLeaveBack: () => {
             changeCoefficient(2.2);
@@ -123,6 +129,7 @@ export default class Animation {
             changeSize(that.blob.scale, { size: 0.25, duration: 1 });
             changePosition(that.blob.position, { x: -0.6, y: 0.5, duration: 2 });
             changePosition(that.metaball.position, { x: 0.3, y: -0.2, duration: 2 });
+            that.stage = 3;
           },
           // onLeave: () => {
           //   changePosition(that.blob.position, { x: 0, y: 0, duration: 2 });
@@ -131,6 +138,7 @@ export default class Animation {
           onEnterBack: () => {
             changePosition(that.blob.position, { x: -0.6, y: 0.5, duration: 2 });
             changePosition(that.metaball.position, { x: 0.3, y: -0.2, duration: 2 });
+            that.stage = 3;
           },
           onLeaveBack: () => {
             changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1, });
@@ -158,6 +166,7 @@ export default class Animation {
             changeSize(that.blob.scale, { size: 0.25, duration: 1 });
             changePosition(that.blob.position, { x: -1.7, y: 0.5, duration: 1 });
             changePosition(that.metaball.position, { x: -2.6, y: -0.2, duration: 1 });
+            
           },
           onLeaveBack: () => {
             changePosition(that.blob.position, { x: -0.6, y: 0.5, duration: 1 });
@@ -179,6 +188,7 @@ export default class Animation {
             changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1 });
             changePosition(that.blob.position, { x: 0, y: 0, duration: 2 });
             changePosition(that.metaball.position, { x: 0, y: 0, duration: 2 });
+            that.stage = 4;
           },
           onLeave: () => {
             // changeSize(that.blob.scale, { size: 0.01, duration: 1, delay: 1, });
@@ -204,6 +214,7 @@ export default class Animation {
           scrub: 1,
           onEnter: () => {
             changeSize(that.grid.scale, { size: 1.0, duration: 1, delay: 1, ease: 'elastic(1.2, 0.7)' });
+            that.stage = 4;
           },
           onLeave: () => {
             changeSize(that.grid.scale, { size: 0.0001, duration: 1, delay: 1, ease: 'elastic(0.8, 0.7)' });

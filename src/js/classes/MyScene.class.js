@@ -78,7 +78,8 @@ export default class MyScene {
     this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh, this.objects.grid.group);
     
     // METHODS
-    new Animation(this.camera, this.objects);
+    this.animation = new Animation(this.camera, this.objects);
+
     this.resize();
     this.render();
     this.setupListeners();
@@ -86,7 +87,7 @@ export default class MyScene {
 
   updateObjects(time){
     this.objects.blob.updateMesh(time/7);
-    this.objects.metaball.updateMesh(this.mouse, time/3, this.width, this.height);
+    this.objects.metaball.updateMesh(time/6);
   }
  
   setupListeners() {
@@ -104,15 +105,20 @@ export default class MyScene {
 
   mousemove(event) {
     const direction = this.mouse.x < event.x ? 1 : -1;
-    
+    let delta = 1.0;
+    if(this.animation.stage === 0){
+        delta = (event.x -  this.width/2)*0.001;
+    } else if(this.animation.stage === 1){
+        delta = (event.x -  this.width/2)*0.001 - 0.4;
+    } 
     // rotate ipads on mousemove
     this.objects.ipads.updateRotation(direction);
 
     // rotate blob on mousemove
-    this.objects.blob.updateRotation(this.mouse, event);
+    this.objects.blob.updateRotation(this.mouse, event, delta);
 
     // rotate metaball on mousemove
-    this.objects.metaball.updateRotation(this.mouse, event);
+    this.objects.metaball.updateRotation(this.mouse, event, delta);
 
     // set new mouse coords
     this.mouse.x = event.x;

@@ -29,11 +29,8 @@ export default class Blob {
         uColor: {
           value: color,
         },
-        mouseX: {
-          value: 0,
-        },
-        mouseY: {
-          value: 0,
+        delta: {
+          value: 1,
         }
       },
       vertexShader: vertexShader,
@@ -47,12 +44,20 @@ export default class Blob {
     this.mesh.position.set(-1, 0, 0);
   }
 
-  updateRotation(mouse, event){
+  updateRotation(mouse, event, delta){
     this.mesh.rotateY(-1 * (mouse.x - event.x) / 1000);
     this.mesh.rotateX(-1 * (mouse.y - event.y) / 1000);
+    // const width = window.innerWidth;
+    // if(stage === 0){
+    //   const deltaX = (event.x -  width/2)*0.001;
+    //   this.material.uniforms.delta.value = deltaX;
+    // } else if(stage === 1){
+    //   const deltaX = (event.x -  width/2)*0.001 - 0.4;
+    //   this.material.uniforms.delta.value = deltaX;
+    // } else {
+    this.material.uniforms.delta.value = delta;
 
-    this.material.uniforms.mouseX.value = event.x;
-    this.material.uniforms.mouseY.value = event.y;
+    
   }
 
   updateMesh(time){
