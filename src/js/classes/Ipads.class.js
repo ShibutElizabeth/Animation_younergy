@@ -40,7 +40,6 @@ export default class Ipads{
             root.getObjectByName('Empty_Object_7')
           );
           this.ipads.forEach((ipad, idx) => {
-            console.log(ipad)
             // set scale & position
             // ipad.scale.set(0, 0, 0);
             ipad.rotation.set(0, 0, 0);
