@@ -66,6 +66,7 @@ export default class MyScene {
       x: 0,
       y: 0,
     };
+    this.firstPart = true;
 
     // objects
     this.objects = {
@@ -75,7 +76,7 @@ export default class MyScene {
         grid: new Grid(),
     }
     
-    this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh, this.objects.grid.group);
+    this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh, this.objects.ipads.mesh);
     
     // METHODS
     this.animation = new Animation(this.camera, this.objects);
@@ -103,16 +104,29 @@ export default class MyScene {
     this.camera.updateProjectionMatrix();
   }
 
+  updateEvents(){
+    // console.log(this.animation.stage);
+    if(this.animation.stage < 2){
+      this.firstPart = true;
+    } else {
+      this.firstPart = false;
+    }
+  }
+
   mousemove(event) {
     const direction = this.mouse.x < event.x ? 1 : -1;
     let delta = 1.0;
-    if(this.animation.stage === 0){
+    if(this.firstPart){
+      if(this.animation.stage === 0){
         delta = (event.x -  this.width/2)*0.001;
-    } else if(this.animation.stage === 1){
+      } else if(this.animation.stage === 1){
         delta = (event.x -  this.width/2)*0.001 - 0.4;
-    } else{
-        delta = 0.45;
-    } 
+      }
+    }
+    // else{
+    //     delta = 0.45;
+    // } 
+
 
     // rotate ipads on mousemove
     this.objects.ipads.updateRotation(direction);
@@ -132,6 +146,7 @@ export default class MyScene {
     if (!this.isPlaying) return;
     this.time += 0.05;
 
+    this.updateEvents();
     // update objects
     this.updateObjects(this.time);
 

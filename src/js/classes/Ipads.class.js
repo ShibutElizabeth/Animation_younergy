@@ -28,18 +28,19 @@ export default class Ipads{
         const positions = [
           [-1.45, 0.0, 0.0],
           [0.0, 0.0, 1.45],
-          [1.45, 0.0, 0.0]
+          [1.45, 0.0, 0.0],
         ];
     
         loader.load(link, (gltf) => {
           const root = gltf.scene;
-    
+          
           this.ipads.push(
             root.getObjectByName('Empty_Object_6'),
             root.getObjectByName('Empty_Object_4'),
             root.getObjectByName('Empty_Object_7')
           );
           this.ipads.forEach((ipad, idx) => {
+            console.log(ipad)
             // set scale & position
             // ipad.scale.set(0, 0, 0);
             ipad.rotation.set(0, 0, 0);
@@ -54,7 +55,7 @@ export default class Ipads{
           });
           // console.log(this.dumpObject(root).join('\n'));
         });
-        this.mesh.scale.set(0.000000001, 0.000000001, 0.000000001);
+        // this.mesh.scale.set(0.000000001, 0.000000001, 0.000000001);
         // this.mesh.rotateY(-Math.PI/2);
     }
 

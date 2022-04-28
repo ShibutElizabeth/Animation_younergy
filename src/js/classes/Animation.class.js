@@ -69,13 +69,17 @@ export default class Animation {
         x: 0,
         duration: 2,
         onStart: ()=>{
-          that.stage = 1;
+          that.changeStage(1);
+          // that.stage = 1;
+        },
+        onReverseComplete: ()=>{
+          that.changeStage(0);
         },
         scrollTrigger: {
           trigger: '#section-2',
           start: 'top bottom',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -92,7 +96,7 @@ export default class Animation {
           trigger: '#section-2',
           start: 'top bottom',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -109,7 +113,8 @@ export default class Animation {
           trigger: '#section-2',
           start: 'top 80%',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -131,13 +136,15 @@ export default class Animation {
         z: 0.0000001,
         duration: 2,
         onStart: ()=>{
-          that.stage = 2;
+          that.changeStage(2);
+          // that.stage = 2;
         },
+        
         scrollTrigger: {
           trigger: '#section-4',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -153,7 +160,7 @@ export default class Animation {
           trigger: '#section-5',
           start: 'top center',
           end: 'bottom center',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -165,11 +172,14 @@ export default class Animation {
         x: 1.2,
         y: 1.2,
         z: 1.2,
+        onReverseComplete: ()=>{
+          that.changeStage(1);
+        },
         scrollTrigger: {
           trigger: '#section-5',
           start: 'top bottom',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -184,13 +194,17 @@ export default class Animation {
         y: 0.25,
         z: 0.25,
         onStart: ()=>{
-          that.stage = 3;
+          that.changeStage(3);
+          // that.stage = 3;
+        },
+        onReverseComplete: ()=>{
+          that.changeStage(2);
         },
         scrollTrigger: {
           trigger: '#section-6',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -204,7 +218,7 @@ export default class Animation {
           trigger: '#section-6',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -218,7 +232,7 @@ export default class Animation {
           trigger: '#section-6',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -230,7 +244,7 @@ export default class Animation {
           trigger: '#section-8',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -242,7 +256,7 @@ export default class Animation {
           trigger: '#section-8',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -255,13 +269,17 @@ export default class Animation {
         x: 0,
         y: 0,
         onStart: ()=>{
-          that.stage = 4;
+          // that.stage = 4;
+          that.changeStage(4);
+        },
+        onReverseComplete: ()=>{
+          that.changeStage(3);
         },
         scrollTrigger: {
           trigger: '#section-10',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -277,7 +295,7 @@ export default class Animation {
           trigger: '#section-10',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -291,7 +309,7 @@ export default class Animation {
           trigger: '#section-10',
           start: 'top center',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -307,7 +325,7 @@ export default class Animation {
           trigger: '#section-12',
           start: 'top bottom',
           end: 'bottom top',
-          scrub: 2,
+          scrub: 1,
           toggleActions: 'restart pause reverse pause',
         }
       });
@@ -320,6 +338,18 @@ export default class Animation {
         value: k2,
         duration: 2,
       })
+    }
+
+    changeStage(k){
+      // console.log("k: " + k);
+      // console.log("stage: " + this.stage)
+      if(this.stage === 1 && k === 2){
+        this.changeCoefficient(2.2, 1.0);
+      } else if(this.stage === 2 && k === 1){
+        this.changeCoefficient(1.0, 2.2);
+      }
+      this.stage = k;
+      
     }
 
     firstStage() {
