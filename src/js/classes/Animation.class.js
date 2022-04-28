@@ -143,6 +143,7 @@ export default class Animation {
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -276,6 +277,7 @@ export default class Animation {
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })

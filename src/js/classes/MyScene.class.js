@@ -1,6 +1,5 @@
 import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
-import GUI from 'lil-gui';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Blob from './Blob.class';
 import Metaball from './Metaball.class';
@@ -105,7 +104,6 @@ export default class MyScene {
   }
 
   updateEvents(){
-    // console.log(this.animation.stage);
     if(this.animation.stage < 2){
       this.firstPart = true;
     } else {
@@ -143,6 +141,7 @@ export default class MyScene {
     this.time += 0.05;
 
     this.updateEvents();
+
     // update objects
     this.updateObjects(this.time);
 
@@ -161,21 +160,6 @@ export default class MyScene {
       this.render()
     }
   }
-
-  settings() {
-    this.settings = {
-      koeff: 2.2,
-      r: 0.94,
-      g: 0.44,
-      b: 0.17,
-    };
-    // this.gui = new GUI();
-    // this.gui.add(this.settings, "koeff", 0, 10, 0.1);
-    // this.gui.add(this.settings, "r", 0, 1, 0.01);
-    // this.gui.add(this.settings, "g", 0, 1, 0.01);
-    // this.gui.add(this.settings, "b", 0, 1, 0.01);
-  }
-
 }
 
 new MyScene({
