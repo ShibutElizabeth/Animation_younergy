@@ -2,7 +2,6 @@ import 'regenerator-runtime/runtime';
 import { gsap } from 'gsap';
 import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 import ScrollToPlugin from 'gsap/dist/ScrollToPlugin';
-import { changePosition, changeSize } from '../utils/changeState';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -16,19 +15,6 @@ export default class Animation {
       this.camera = camera;
       this.stage = 0;
       this.setupTimeline();
-      // this.firstStage();
-      // this.secondStage();
-      // this.thirdStage();
-      // this.fourthStage();
-      // this.getProgress();
-    }
-
-    getProgress(){
-      ScrollTrigger.create({
-        onUpdate({progress, direction, isActive}) {
-          console.log((progress*100).toFixed());
-        }
-      })
     }
 
     setupTimeline(){
@@ -79,6 +65,7 @@ export default class Animation {
           start: 'top bottom',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -131,6 +118,9 @@ export default class Animation {
         onStart: ()=>{
           that.changeStage(2);
         },
+        onReverseComplete: ()=>{
+          that.changeStage(1);
+        },
         scrollTrigger: {
           trigger: '#section-4',
           start: 'top center',
@@ -148,9 +138,6 @@ export default class Animation {
         x: 0.25,
         y: 0.25,
         z: 0.25,
-        onReverseComplete: ()=>{
-          that.changeStage(1);
-        },
         scrollTrigger: {
           trigger: '#section-5',
           start: 'top center',
@@ -172,6 +159,7 @@ export default class Animation {
           start: 'top bottom',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -249,6 +237,7 @@ export default class Animation {
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -301,6 +290,7 @@ export default class Animation {
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
