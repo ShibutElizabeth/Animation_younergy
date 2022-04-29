@@ -30,7 +30,7 @@ export default class Ipads{
           [0.0, 0.0, 1.45],
           [1.45, 0.0, 0.0],
         ];
-    
+        
         loader.load(link, (gltf) => {
           const root = gltf.scene;
           
