@@ -1,6 +1,5 @@
 import 'regenerator-runtime/runtime';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Blob from './Blob.class';
 import Metaball from './Metaball.class';
 import Ipads from './Ipads.class';
@@ -29,8 +28,6 @@ export default class MyScene {
     // CAMERA
     this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
     this.camera.position.set(-1, 0, 2.8);
-
-    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     // LIGHTS
     const light = new THREE.DirectionalLight(0xffffff);

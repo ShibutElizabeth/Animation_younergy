@@ -28,6 +28,7 @@ export default class Grid {
 
         this.material.onBeforeCompile = (shader) => {
             shader.uniforms.iTime = { value: 0.0 };
+            shader.uniforms.show = { value: 1.0 };
             that.material.uniforms = shader.uniforms;
             shader.vertexShader = shader.vertexShader.replace(
                 `varying vec3 vViewPosition;`,
@@ -44,6 +45,7 @@ export default class Grid {
                 `varying vec3 vViewPosition;`,
                 `varying vec3 vViewPosition;
                 uniform float iTime;
+                uniform float show;
                 varying vec3 pos;
                 varying vec2 vUv;
                 #define M_PI 3.14159265359

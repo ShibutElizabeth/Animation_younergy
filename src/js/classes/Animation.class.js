@@ -166,23 +166,6 @@ export default class Animation {
       })
 
       // STAGE #3
-      // .fromTo(blobSize, {
-      //   x: 0.01,
-      //   y: 0.01,
-      //   z: 0.01,
-      // }, {
-      //   x: 0.25,
-      //   y: 0.25,
-      //   z: 0.25,
-        
-      //   scrollTrigger: {
-      //     trigger: '#section-6',
-      //     start: 'top center',
-      //     end: 'bottom top',
-      //     scrub: 1,
-      //     toggleActions: 'restart pause reverse pause',
-      //   }
-      // })
       .fromTo(blobPosition, {
         x: 0.0,
         y: 0.0,
@@ -200,6 +183,7 @@ export default class Animation {
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -214,6 +198,7 @@ export default class Animation {
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -226,6 +211,7 @@ export default class Animation {
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
+          snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
@@ -290,27 +276,28 @@ export default class Animation {
         scrollTrigger: {
           trigger: '#section-11',
           start: 'top center',
-          end: 'bottom top',
+          end: 'bottom center',
           scrub: 1,
           snap: 1,
           toggleActions: 'restart pause reverse pause',
         }
       })
       .fromTo(that.grid.scale, {
-        x: 0.00001,
-        y: 0.00001,
-        z: 0.00001,
+        x: 0.001,
+        y: 0.001,
+        z: 0.001,
       }, {
-        x: 1.3,
-        y: 1.3,
-        z: 1.3,
+        x: 1,
+        y: 1,
+        z: 1,
+        ease: 'power4.easeInOut',
         scrollTrigger: {
           trigger: '#section-12',
-          start: 'top bottom',
-          end: 'bottom top',
+          start: 'top center',
+          end: 'bottom bottom',
           scrub: 1,
           toggleActions: 'restart pause reverse pause',
-        }
+        },
       })
     }
 
