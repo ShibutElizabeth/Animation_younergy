@@ -11,7 +11,7 @@ export default class Animation {
       this.blob = objects.blob.mesh;
       this.ipads = objects.ipads.mesh;
       this.metaball = objects.metaball.mesh;
-      // this.grid = objects.grid.mesh;
+      this.grid = objects.grid.mesh;
       this.camera = camera;
       this.stage = 0;
       this.setupTimeline();
@@ -296,34 +296,22 @@ export default class Animation {
           toggleActions: 'restart pause reverse pause',
         }
       })
-      // .fromTo(that.blob.material, {
-      //   wireframe: false,
-      // }, {
-      //   wireframe: true,
-      //   scrollTrigger: {
-      //     trigger: '#section-12',
-      //     start: 'top 110%',
-      //     end: 'top bottom',
-      //     scrub: 1,
-      //     toggleActions: 'restart pause reverse pause',
-      //   }
-      // })
-      // .fromTo(blobSize, {
-      //   x: 0.1,
-      //   y: 0.1,
-      //   z: 0.1,
-      // }, {
-      //   x: 1.0,
-      //   y: 1.0,
-      //   z: 1.0,
-      //   scrollTrigger: {
-      //     trigger: '#section-12',
-      //     start: 'top bottom',
-      //     end: 'bottom top',
-      //     scrub: 1,
-      //     toggleActions: 'restart pause reverse pause',
-      //   }
-      // });
+      .fromTo(that.grid.scale, {
+        x: 0.00001,
+        y: 0.00001,
+        z: 0.00001,
+      }, {
+        x: 1.3,
+        y: 1.3,
+        z: 1.3,
+        scrollTrigger: {
+          trigger: '#section-12',
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: 1,
+          toggleActions: 'restart pause reverse pause',
+        }
+      })
     }
 
     changeCoefficient(k1, k2) {

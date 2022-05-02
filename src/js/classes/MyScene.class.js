@@ -5,7 +5,7 @@ import Blob from './Blob.class';
 import Metaball from './Metaball.class';
 import Ipads from './Ipads.class';
 import Animation from './Animation.class';
-import NextGrid from './NextGrid.class';
+import Grid from './Grid.class';
 
 export default class MyScene {
   constructor(options) {
@@ -72,10 +72,10 @@ export default class MyScene {
         blob: new Blob(),
         metaball: new Metaball(),
         ipads: new Ipads(),
-        grid: new NextGrid(),
+        grid: new Grid(),
     }
     
-    this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh , this.objects.grid.group);
+    this.scene.add(this.objects.blob.mesh, this.objects.ipads.mesh, this.objects.metaball.mesh , this.objects.grid.mesh);
     
     // METHODS
     this.animation = new Animation(this.camera, this.objects);
@@ -88,7 +88,7 @@ export default class MyScene {
   updateObjects(time){
     this.objects.blob.updateMesh(time/7);
     this.objects.metaball.updateMesh(time/6);
-    // this.objects.grid.updateMesh(time/6);
+    this.objects.grid.updateMesh(time/6);
   }
  
   setupListeners() {
