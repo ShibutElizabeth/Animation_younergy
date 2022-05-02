@@ -44,11 +44,9 @@ export default class Blob {
     this.mesh.position.set(-1, 0, 0);
   }
 
-  updateRotation(mouse, event, delta){
-    this.mesh.rotateY(-1 * (mouse.x - event.x) / 1000);
-    this.mesh.rotateX(-1 * (mouse.y - event.y) / 1000);
-
-    this.material.uniforms.delta.value = delta;
+  updateRotation(mouse){
+    this.mesh.rotation.x = mouse.y;
+    this.mesh.rotation.y = mouse.x;
   }
 
   updateDelta(delta){

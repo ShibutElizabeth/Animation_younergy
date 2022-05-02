@@ -85,10 +85,12 @@ export default class Metaball {
     effect.material.opacity = 1 * time / 8;
   }
 
-  updateRotation(mouse, event, delta) {
-    this.mesh.rotateY(-1 * (mouse.x - event.x) / 1000);
-    this.mesh.rotateX(-1 * (mouse.y - event.y) / 1000);
-    // this.loop = 10.0 + delta;
+  updateRotation(mouse) {
+    this.mesh.rotation.x = mouse.y;
+    this.mesh.rotation.y = mouse.x;
+  }
+
+  updateDelta(delta){
     this.delta = delta;
   }
 }

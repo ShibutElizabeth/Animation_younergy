@@ -58,6 +58,7 @@ export default class MyScene {
     this.scene.add(ambientLight);
 
     // MAIN VARIABLES
+    this.mouseTarget = new THREE.Vector2(0,0);
     this.time = 0;
     this.isPlaying = true;
     this.mouse = {
@@ -113,7 +114,7 @@ export default class MyScene {
   }
 
   mousemove(event) {
-    const direction = this.mouse.x < event.x ? 1 : -1;
+    const direction = this.mouse.x * this.width < event.x ? 1 : -1;
     let delta = 1.0;
     if(this.firstPart){
       if(this.animation.stage === 0){
@@ -127,14 +128,14 @@ export default class MyScene {
     this.objects.ipads.updateRotation(direction);
 
     // rotate blob on mousemove
-    this.objects.blob.updateRotation(this.mouse, event, delta);
+    this.objects.blob.updateDelta(delta);
 
     // rotate metaball on mousemove
-    this.objects.metaball.updateRotation(this.mouse, event, delta);
+    this.objects.metaball.updateDelta(delta);
 
     // set new mouse coords
-    this.mouse.x = event.x;
-    this.mouse.y = event.y;
+    this.mouse.x = event.x / this.width;
+    this.mouse.y = event.y / this.height;
   }
 
   render() {
@@ -142,6 +143,12 @@ export default class MyScene {
     this.time += 0.05;
 
     this.updateEvents();
+
+    this.mouseTarget.x += (this.mouse.x - this.mouseTarget.x)*0.05
+    this.mouseTarget.y += (this.mouse.y - this.mouseTarget.y)*0.05
+
+    this.objects.blob.updateRotation(this.mouseTarget);
+    this.objects.metaball.updateRotation(this.mouseTarget);
 
     // update objects
     this.updateObjects(this.time);

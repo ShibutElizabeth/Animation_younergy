@@ -9,7 +9,7 @@ export default class Grid {
     setupMesh() {
         this.geometry = new THREE.SphereBufferGeometry(1, 100, 100);
         this.time = 0.0;
-        this.getMaterial(0x969696, 0.3, 0.15);
+        this.getMaterial(0x888888, 0.3, 0.15);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
