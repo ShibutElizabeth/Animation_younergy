@@ -1,11 +1,14 @@
-import * as THREE from 'three';
+import {
+  Group,
+  MeshPhysicalMaterial
+} from 'three';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { dumpObject } from '../utils/utils';
 
 export default class Ipads{
     constructor(){
-        this.mesh = new THREE.Group();
+        this.mesh = new Group();
         this.ipads = [];
         this.angle = 0;
         this.isRotating = false;
@@ -14,7 +17,7 @@ export default class Ipads{
     }
 
     setupMaterial(){
-        this.material = new THREE.MeshPhysicalMaterial({
+        this.material = new MeshPhysicalMaterial({
             color: 0xffffff,
             roughness: 1,
             reflectivity: 1,
@@ -54,8 +57,6 @@ export default class Ipads{
           });
           // console.log(this.dumpObject(root).join('\n'));
         });
-        // this.mesh.scale.set(0.000000001, 0.000000001, 0.000000001);
-        // this.mesh.rotateY(-Math.PI/2);
     }
 
     updateRotation(direction){

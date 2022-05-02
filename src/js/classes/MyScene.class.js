@@ -1,5 +1,15 @@
 import 'regenerator-runtime/runtime';
-import * as THREE from 'three';
+import { 
+  Scene, 
+  WebGLRenderer,
+  PerspectiveCamera,
+  DirectionalLight,
+  PointLight,
+  AmbientLight,
+  Vector2,
+  sRGBEncoding,
+  PCFSoftShadowMap,
+} from 'three';
 import Blob from './Blob.class';
 import Metaball from './Metaball.class';
 import Ipads from './Ipads.class';
@@ -10,27 +20,27 @@ export default class MyScene {
   constructor(options) {
 
     // CONTAINER & RENDERER
-    this.scene = new THREE.Scene();
+    this.scene = new Scene();
     this.container = options.dom;
     this.width = this.container.offsetWidth;
     this.height = this.container.offsetHeight;
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new WebGLRenderer();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.setSize(this.width, this.height);
     this.renderer.setClearColor(0xf0712c, 0);
     this.renderer.physicallyCorrectLights = true;
-    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.renderer.outputEncoding = sRGBEncoding;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
 
     this.container.appendChild(this.renderer.domElement);
 
     // CAMERA
-    this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
+    this.camera = new PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
     this.camera.position.set(-1, 0, 2.8);
 
     // LIGHTS
-    const light = new THREE.DirectionalLight(0xffffff);
+    const light = new DirectionalLight(0xffffff);
     light.position.set(1.5, 0, 5);
     const r = 3;
     light.shadow.camera.near = .001;
@@ -43,19 +53,19 @@ export default class MyScene {
     light.castShadow = true;
     this.scene.add(light);
 
-    const light2 = new THREE.DirectionalLight(0xffffff, 1);
+    const light2 = new DirectionalLight(0xffffff, 1);
     light2.position.set(0.5, 0, 5);
     this.scene.add(light2)
-    const pointLight = new THREE.PointLight(0xffffff);
+    const pointLight = new PointLight(0xffffff);
     pointLight.position.set(1.5, 0, 5);
     this.scene.add(pointLight);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff);
+    const ambientLight = new AmbientLight(0xffffff);
     ambientLight.position.set(0.5, 0, 2);
     this.scene.add(ambientLight);
 
     // MAIN VARIABLES
-    this.mouseTarget = new THREE.Vector2(0,0);
+    this.mouseTarget = new Vector2(0,0);
     this.time = 0;
     this.isPlaying = true;
     this.mouse = {

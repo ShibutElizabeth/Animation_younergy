@@ -1,5 +1,11 @@
 import 'regenerator-runtime/runtime';
-import * as THREE from 'three';
+import {
+  Vector3,
+  ShaderMaterial,
+  Mesh,
+  SphereBufferGeometry,
+  DoubleSide,
+} from 'three';
 import fragmentShader from '../../shaders/fragment-blob.glsl';
 import vertexShader from '../../shaders/vertex-blob.glsl';
 
@@ -13,12 +19,12 @@ export default class Blob {
 
   setupMaterial(){
     const k = this.coefficient;
-    const color = new THREE.Vector3(0.91, 0.44, 0.17);
-    this.material = new THREE.ShaderMaterial({
+    const color = new Vector3(0.91, 0.44, 0.17);
+    this.material = new ShaderMaterial({
       extensions: {
         derivatives: "#extension GL_OES_standard_derivatives : enable"
       },
-      side: THREE.DoubleSide,
+      side: DoubleSide,
       uniforms: {
         time: {
           value: 0
@@ -39,8 +45,8 @@ export default class Blob {
   }
 
   setupMesh(){
-    this.geometry = new THREE.SphereBufferGeometry(1, 100, 100);
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.geometry = new SphereBufferGeometry(1, 100, 100);
+    this.mesh = new Mesh(this.geometry, this.material);
     this.mesh.position.set(-1, 0, 0);
   }
 

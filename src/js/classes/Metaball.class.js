@@ -1,4 +1,8 @@
-import * as THREE from 'three';
+import {
+  ShaderMaterial,
+  Vector3,
+  DoubleSide,
+} from 'three';
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes';
 import fragmentShader from '../../shaders/fragment-metaball.glsl';
 import vertexShader from '../../shaders/vertex-metaball.glsl';
@@ -18,11 +22,11 @@ export default class Metaball {
 
   setMaterial() {
     const koeff = 2.2;
-    this.material = new THREE.ShaderMaterial({
+    this.material = new ShaderMaterial({
       extensions: {
         derivatives: "#extension GL_OES_standard_derivatives : enable"
       },
-      side: THREE.DoubleSide,
+      side: DoubleSide,
       uniforms: {
         time: {
           value: 0
@@ -31,7 +35,7 @@ export default class Metaball {
           value: 1.5 * koeff,
         },
         uColor: {
-          value: new THREE.Vector3(0.94, 0.44, 0.17)
+          value: new Vector3(0.94, 0.44, 0.17)
         },
       },
       vertexShader: vertexShader,
@@ -70,7 +74,7 @@ export default class Metaball {
     const radius = 0.25;
     const time = TIME % 6;
     const t = time / 6;
-    const tmpVector = new THREE.Vector3();
+    const tmpVector = new Vector3();
     this.blobs.forEach((blob, idx) => {
       const r = radius * Math.cos(t * TAU + blob.offset);
       tmpVector.x = r * Math.sin(blob.theta) * Math.cos(blob.phi);

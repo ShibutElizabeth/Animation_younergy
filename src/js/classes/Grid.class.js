@@ -1,5 +1,10 @@
 import 'regenerator-runtime/runtime';
-import * as THREE from 'three';
+import {
+    SphereBufferGeometry,
+    Mesh,
+    MeshStandardMaterial,
+    DoubleSide,
+} from 'three';
 
 export default class Grid {
     constructor() {
@@ -7,10 +12,10 @@ export default class Grid {
     }
 
     setupMesh() {
-        this.geometry = new THREE.SphereBufferGeometry(1, 100, 100);
+        this.geometry = new SphereBufferGeometry(1, 100, 100);
         this.time = 0.0;
         this.getMaterial(0x888888, 0.3, 0.15);
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh = new Mesh(this.geometry, this.material);
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
         this.mesh.position.set(0, 0, 0);
@@ -18,12 +23,12 @@ export default class Grid {
 
     getMaterial(color, roughness, opacity) {
         const that = this;
-        this.material = new THREE.MeshStandardMaterial({
+        this.material = new MeshStandardMaterial({
             color,
             roughness: roughness,
             metalness: 0.02,
             opacity,
-            side: THREE.DoubleSide,
+            side: DoubleSide,
         });
 
         this.material.onBeforeCompile = (shader) => {
