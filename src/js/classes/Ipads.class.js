@@ -37,25 +37,43 @@ export default class Ipads{
         loader.load(link, (gltf) => {
           const root = gltf.scene;
           
+          // // console.log(this.dumpObject(root).join('\n'));
+          // // this.ipads.push(
+          //   const ipad = root.getObjectByName('tablet');
+          //   for(let i = 0; i < 3; i++){
+          //     this.ipads.push(root.getObjectByName('tablet'));
+          //   }
+          // // );
+          // this.ipads.forEach(ipad => {
+          //   ipad["children"].forEach((child) => {
+          //     child["material"] = this.material;
+          //   })
+          //   this.mesh.add(ipad);
+          // })
+          
           this.ipads.push(
             root.getObjectByName('Empty_Object_6'),
             root.getObjectByName('Empty_Object_4'),
             root.getObjectByName('Empty_Object_7')
           );
+
           this.ipads.forEach((ipad, idx) => {
+            
             // set scale & position
             // ipad.scale.set(0, 0, 0);
             ipad.rotation.set(0, 0, 0);
             ipad.position.set(positions[idx][0], positions[idx][1], positions[idx][2]);
             ipad.rotateY(idx * (Math.PI / 2));
-    
+            ipad.position.set(1.45, 0, 0)
+            console.log(ipad);
             // add ipad material
             ipad["children"].forEach((child) => {
               child["material"] = this.material;
             })
             this.mesh.add(ipad);
           });
-          // console.log(this.dumpObject(root).join('\n'));
+          
+          this.mesh.position.set(0, 0, 0)
         });
     }
 
@@ -76,4 +94,16 @@ export default class Ipads{
             }, 1000);
         }
     }
+    
+    dumpObject(obj, lines = [], isLast = true, prefix = '') {
+      const localPrefix = isLast ? '└─' : '├─';
+      lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}]`);
+      const newPrefix = prefix + (isLast ? '  ' : '│ ');
+      const lastNdx = obj.children.length - 1;
+      obj.children.forEach((child, ndx) => {
+          const isLast = ndx === lastNdx;
+          this.dumpObject(child, lines, isLast, newPrefix);
+      });
+      return lines;
+  }
 }

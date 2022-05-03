@@ -10,6 +10,7 @@ import {
   sRGBEncoding,
   PCFSoftShadowMap,
 } from 'three';
+import GUI from 'lil-gui';
 import Blob from './Blob.class';
 import Metaball from './Metaball.class';
 import Ipads from './Ipads.class';
@@ -91,6 +92,7 @@ export default class MyScene {
     this.resize();
     this.render();
     this.setupListeners();
+    // this.settings();
   }
 
   updateObjects(time){
@@ -122,23 +124,17 @@ export default class MyScene {
 
   mousemove(event) {
     const direction = this.mouse.x * this.width < event.x ? 1 : -1;
-    let delta = 1.0;
+    this.delta = 1.0;
     if(this.firstPart){
       if(this.animation.stage === 0){
-        delta = (event.x -  this.width/2)*0.001;
+        this.delta = (event.x -  this.width/2)/this.width;
       } else if(this.animation.stage === 1){
-        delta = (event.x -  this.width/2)*0.001 - 0.4;
+        this.delta = (event.x -  this.width/2)/this.width - 0.4;
       }
     }
 
     // rotate ipads on mousemove
     this.objects.ipads.updateRotation(direction);
-
-    // rotate blob on mousemove
-    this.objects.blob.updateDelta(delta);
-
-    // rotate metaball on mousemove
-    this.objects.metaball.updateDelta(delta);
 
     // set new mouse coords
     this.mouse.x = event.x / this.width;
@@ -159,6 +155,11 @@ export default class MyScene {
 
     // update objects
     this.updateObjects(this.time);
+    // rotate blob on mousemove
+    this.objects.blob.updateDelta(this.delta);
+
+    // rotate metaball on mousemove
+    this.objects.metaball.updateDelta(this.delta);
 
     // render
     requestAnimationFrame(this.render.bind(this));
@@ -175,6 +176,18 @@ export default class MyScene {
       this.render()
     }
   }
+
+  settings() {
+    this.settings = {
+      numberOfBlobs: 15,
+    };
+    this.gui = new GUI();
+    // this.gui.add(this.settings, "numberOfBlobs", 0, 20, 1);
+    // this.gui.add(this.settings, "r", 0, 1, 0.01);
+    // this.gui.add(this.settings, "g", 0, 1, 0.01);
+    // this.gui.add(this.settings, "b", 0, 1, 0.01);
+  }
+
 }
 
 new MyScene({

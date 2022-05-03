@@ -12,7 +12,7 @@ import vertexShader from '../../shaders/vertex-blob.glsl';
 export default class Blob {
   constructor(){
     this.size = 1.0;
-    this.coefficient = 2.2;
+    this.coefficient = 1.6;
     this.setupMaterial();
     this.setupMesh();
   }

@@ -13,7 +13,7 @@ export default class Metaball {
   constructor() {
     this.size = 0.2;
     this.resolution = 50;
-    this.numberOfBlobs = 15;
+    this.numberOfBlobs = 13;
     this.blobs = [];
     this.setMaterial();
     this.setupEffect(this.resolution, this.material, this.size);
@@ -67,13 +67,13 @@ export default class Metaball {
 
   updateMesh(TIME) {
     const effect = this.mesh;
-    effect.isolation = 500;
+    effect.isolation = 250;
     effect.reset();
     const PI = Math.PI;
     const TAU = 2 * Math.PI;
     const radius = 0.25;
-    const time = TIME % 6;
-    const t = time / 6;
+    const time = TIME % 5;
+    const t = time / 5;
     const tmpVector = new Vector3();
     this.blobs.forEach((blob, idx) => {
       const r = radius * Math.cos(t * TAU + blob.offset);

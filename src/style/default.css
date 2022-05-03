@@ -39,3 +39,25 @@ body {
 .content__section--orange{
     background-color: #f0712c;
 }
+
+.small-text{
+    position: fixed;
+    font-size: 50px;
+    font-family: 'Arial', sans-serif;
+    color: #f0712c;
+    top: 17%;
+    left: 54%;
+    opacity: 0;
+    z-index: 100;
+}
+
+.big-text{
+    position: fixed;
+    font-size: 100px;
+    font-family: 'Arial', sans-serif;
+    color: #f0712c;
+    top: 35%;
+    left: 70%;
+    opacity: 0;
+    z-index: 100;
+}

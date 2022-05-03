@@ -14,6 +14,8 @@ export default class Animation {
       this.grid = objects.grid.mesh;
       this.camera = camera;
       this.stage = 0;
+      this.smallText = document.querySelector('.small-text');
+      this.bigText = document.querySelector('.big-text');
       this.setupTimeline();
     }
 
@@ -206,6 +208,25 @@ export default class Animation {
         x: -0.6,
       }, {
         x: -1.7,
+        onStart: () =>{
+          that.textAppear();
+        },
+        onReverseComplete: () => {
+          that.textDisappear();
+        },
+        scrollTrigger: {
+          trigger: '#section-9',
+          start: 'top center',
+          end: 'bottom top',
+          scrub: 1,
+          snap: 1,
+          toggleActions: 'restart pause reverse pause',
+        }
+      })
+      .fromTo(this.smallText, {
+        x: 0,
+      }, {
+        x: '-23vw',
         scrollTrigger: {
           trigger: '#section-9',
           start: 'top center',
@@ -228,6 +249,19 @@ export default class Animation {
           toggleActions: 'restart pause reverse pause',
         }
       })
+      .fromTo(this.bigText, {
+        x: 0,
+      }, {
+        x: '-58vw',
+        scrollTrigger: {
+          trigger: '#section-9',
+          start: 'top center',
+          end: 'bottom top',
+          scrub: 1,
+          snap: 1,
+          toggleActions: 'restart pause reverse pause',
+        }
+      })
 
       // STAGE #4
       .fromTo(blobPosition, {
@@ -238,9 +272,11 @@ export default class Animation {
         y: 0,
         onStart: ()=>{
           that.changeStage(4);
+          that.textDisappear();
         },
         onReverseComplete: ()=>{
           that.changeStage(3);
+          that.textAppear();
         },
         scrollTrigger: {
           trigger: '#section-11',
@@ -312,11 +348,28 @@ export default class Animation {
 
     changeStage(k){
       if(this.stage === 1 && k === 2){
-        this.changeCoefficient(2.2, 1.0);
+        this.changeCoefficient(1.6, 1.0);
       } else if(this.stage === 2 && k === 1){
-        this.changeCoefficient(1.0, 2.2);
+        this.changeCoefficient(1.0, 1.6);
       }
       this.stage = k;
-      
+    }
+
+    textAppear(){
+      gsap.fromTo([this.smallText, this.bigText], {
+        opacity: 0,
+      }, {
+        opacity: 1,
+        duration: 0.6,
+      });
+    }
+
+    textDisappear(){
+      gsap.fromTo([this.smallText, this.bigText], {
+        opacity: 1,
+      }, {
+        opacity: 0,
+        duration: 0.6,
+      });
     }
 }
