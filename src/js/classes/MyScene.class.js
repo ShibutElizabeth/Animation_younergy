@@ -4,7 +4,7 @@ import {
   WebGLRenderer,
   PerspectiveCamera,
   DirectionalLight,
-  PointLight,
+  SpotLight,
   AmbientLight,
   Vector2,
   sRGBEncoding,
@@ -40,6 +40,8 @@ export default class MyScene {
     this.camera = new PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
     this.camera.position.set(-1, 0, 2.8);
 
+    this.mouseTarget = new Vector2(0,0);
+
     // LIGHTS
     const light = new DirectionalLight(0xffffff);
     light.position.set(1.5, 0, 5);
@@ -57,16 +59,31 @@ export default class MyScene {
     const light2 = new DirectionalLight(0xffffff, 1);
     light2.position.set(0.5, 0, 5);
     this.scene.add(light2)
-    const pointLight = new PointLight(0xffffff);
-    pointLight.position.set(1.5, 0, 5);
-    this.scene.add(pointLight);
+    
+    // this.pointLight = new PointLight(0x75ba75);
+    // this.pointLight.position.set(1.5, 0, 2);
+    // this.pointLight.position.set(10*this.mouseTarget.x + 1.5, 10*this.mouseTarget + 0.0, 1);
+    // this.scene.add(this.pointLight);
+    
+    this.spotLight = new SpotLight( 0xffffff, 1.0, 4, 0.233, 0.321, 1.0 );
+    this.spotLight.position.set( this.mouseTarget.x, this.mouseTarget.y, 2 );
 
-    const ambientLight = new AmbientLight(0xffffff);
-    ambientLight.position.set(0.5, 0, 2);
-    this.scene.add(ambientLight);
+    this.spotLight.castShadow = true;
+
+    this.spotLight.shadow.mapSize.width = 1024;
+    this.spotLight.shadow.mapSize.height = 1024;
+
+    this.spotLight.shadow.camera.near = 500;
+    this.spotLight.shadow.camera.far = 4000;
+    this.spotLight.shadow.camera.fov = 30;
+    this.scene.add(this.spotLight);
+
+    this.ambientLight = new AmbientLight(0xffffff);
+    this.ambientLight.position.set(0.5, 0, 2);
+    // this.ambientLight.position.set(this.mouseTarget.x + 0.5, this.mouseTarget + 0.0, 2);
+    this.scene.add(this.ambientLight);
 
     // MAIN VARIABLES
-    this.mouseTarget = new Vector2(0,0);
     this.time = 0;
     this.isPlaying = true;
     this.mouse = {
@@ -88,17 +105,17 @@ export default class MyScene {
     
     // METHODS
     this.animation = new Animation(this.camera, this.objects);
-
+    this.settings();
     this.resize();
     this.render();
     this.setupListeners();
-    // this.settings();
+    
   }
 
-  updateObjects(time){
-    this.objects.blob.updateMesh(time/7);
-    this.objects.metaball.updateMesh(time/6);
-    this.objects.grid.updateMesh(time/6);
+  updateObjects(params){
+    this.objects.blob.updateMesh(params.time/7);
+    this.objects.metaball.updateMesh(params.time/6);
+    this.objects.grid.updateMesh(params);
   }
  
   setupListeners() {
@@ -142,6 +159,7 @@ export default class MyScene {
   }
 
   render() {
+    const that = this;
     if (!this.isPlaying) return;
     this.time += 0.05;
 
@@ -153,13 +171,22 @@ export default class MyScene {
     this.objects.blob.updateRotation(this.mouseTarget);
     this.objects.metaball.updateRotation(this.mouseTarget);
 
+    const params = {
+      time: that.time,
+      firstParam: that.uniforms.firstParam,
+      secondParam: that.uniforms.secondParam,
+      color: that.uniforms.colorParam,
+    }
     // update objects
-    this.updateObjects(this.time);
+    this.updateObjects(params);
+
     // rotate blob on mousemove
     this.objects.blob.updateDelta(this.delta);
 
     // rotate metaball on mousemove
     this.objects.metaball.updateDelta(this.delta);
+
+    this.spotLight.position.set( -0.4, 0, 2 );
 
     // render
     requestAnimationFrame(this.render.bind(this));
@@ -178,14 +205,22 @@ export default class MyScene {
   }
 
   settings() {
-    this.settings = {
-      numberOfBlobs: 15,
+    const colorRGB = {
+      R: 0.91,
+      G: 0.44,
+      B: 0.17,
+    }
+    this.uniforms = {
+      firstParam: 0.0,
+      secondParam: 0.02,
+      colorParam: colorRGB,
     };
     this.gui = new GUI();
-    // this.gui.add(this.settings, "numberOfBlobs", 0, 20, 1);
-    // this.gui.add(this.settings, "r", 0, 1, 0.01);
-    // this.gui.add(this.settings, "g", 0, 1, 0.01);
-    // this.gui.add(this.settings, "b", 0, 1, 0.01);
+    this.gui.add(this.uniforms, "firstParam", 0, 1, 0.01);
+    this.gui.add(this.uniforms, "secondParam", 0, 1, 0.01);
+    this.gui.add(colorRGB, 'R', 0.0, 1.0, 0.01);
+    this.gui.add(colorRGB, 'G', 0.0, 1.0, 0.01);
+    this.gui.add(colorRGB, 'B', 0.0, 1.0, 0.01);
   }
 
 }

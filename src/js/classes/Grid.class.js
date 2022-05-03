@@ -1,9 +1,11 @@
 import 'regenerator-runtime/runtime';
+import { Vector3 } from 'three';
 import {
     SphereBufferGeometry,
     Mesh,
     MeshStandardMaterial,
     DoubleSide,
+    Color
 } from 'three';
 
 export default class Grid {
@@ -14,7 +16,7 @@ export default class Grid {
     setupMesh() {
         this.geometry = new SphereBufferGeometry(1, 100, 100);
         this.time = 0.0;
-        this.getMaterial(0xffd58e, 0.3, 0.15);
+        this.getMaterial(0xffd58e, 0.0, 0.15);
         this.mesh = new Mesh(this.geometry, this.material);
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
@@ -32,8 +34,10 @@ export default class Grid {
         });
 
         this.material.onBeforeCompile = (shader) => {
-            shader.uniforms.iTime = { value: 0.0 };
-            shader.uniforms.show = { value: 1.0 };
+            shader.uniforms.iTime = {  value: 0.0  };
+            shader.uniforms.firstParam = {  value: 0.0  };
+            shader.uniforms.secondParam = {  value: 0.02  };
+            shader.uniforms.color = {  value: new Vector3(1.0, 0.0, 0.0)  };
             that.material.uniforms = shader.uniforms;
             shader.vertexShader = shader.vertexShader.replace(
                 `varying vec3 vViewPosition;`,
@@ -50,9 +54,11 @@ export default class Grid {
                 `varying vec3 vViewPosition;`,
                 `varying vec3 vViewPosition;
                 uniform float iTime;
-                uniform float show;
                 varying vec3 pos;
                 varying vec2 vUv;
+                uniform float firstParam;
+                uniform float secondParam;
+                uniform vec3 color;
                 #define M_PI 3.14159265359
                 #define M_TAU (2.*M_PI)
                 const mat2 myt = mat2(.12121212, .13131313, -.13131313, .12121212);
@@ -60,9 +66,6 @@ export default class Grid {
   
                 vec2 hash2( vec2 p )
                 {
-                  // texture based white noise
-                  //return textureLod( iChannel0, (p+0.5)/256.0, 0.0 ).xy;
-  
                     // procedural white noise	
                   return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
                 }
@@ -82,10 +85,8 @@ export default class Grid {
                     for( int i=-1; i<=1; i++ )
                     {
                         vec2 g = vec2(float(i),float(j));
-                    vec2 o = hash2( n + g );
-                    // #ifdef ANIMATE
+                        vec2 o = hash2( n + g );
                         o = 0.5 + 0.5*sin( iTime + 6.2831*o );
-                        // #endif	
                         vec2 r = g + o - f;
                         float d = dot(r,r);
   
@@ -105,10 +106,8 @@ export default class Grid {
                     for( int i=-2; i<=2; i++ )
                     {
                         vec2 g = mg + vec2(float(i),float(j));
-                    vec2 o = hash2( n + g );
-                    // #ifdef ANIMATE
+                        vec2 o = hash2( n + g );
                         o = 0.5 + 0.5*sin( iTime + 6.2831*o );
-                        // #endif	
                         vec2 r = g + o - f;
   
                         if( dot(mr-r,mr-r)>0.00001 )
@@ -124,23 +123,24 @@ export default class Grid {
             `);
             shader.fragmentShader = shader.fragmentShader.replace(
                 `vec4 diffuseColor = vec4( diffuse, opacity );`,
-                `vec4 diffuseColor = vec4( diffuse, 1. );
+                `vec4 diffuseColor = vec4( color, 1. );
                 float strip = pattern(pos);
                 
-                if( smoothstep(.0,.2,strip) >.5){
+                if( smoothstep(firstParam,secondParam,strip) >.5){
                    discard;
                 }
-  
-                // diffuseColor =vec4( vec3(abs(strip)), 1. );
   
                 `);
             }
     }
 
-    updateMesh(time){
+    updateMesh(uniforms){
         if(this.material.uniforms){
-            this.material.uniforms.iTime.value = time;
+            this.material.uniforms.iTime.value = uniforms.time/6;
+            this.material.uniforms.firstParam.value = uniforms.firstParam;
+            this.material.uniforms.secondParam.value = uniforms.secondParam;
+            this.material.uniforms.color.value = new Vector3(uniforms.color.R, uniforms.color.G, uniforms.color.B);
         }
-        
     }
+
 }
