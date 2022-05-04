@@ -40,8 +40,6 @@ export default class MyScene {
     this.camera = new PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
     this.camera.position.set(-1, 0, 2.8);
 
-    this.mouseTarget = new Vector2(0,0);
-
     // LIGHTS
     const light = new DirectionalLight(0xffffff);
     light.position.set(1.5, 0, 5);
@@ -58,21 +56,12 @@ export default class MyScene {
 
     const light2 = new DirectionalLight(0xffffff, 1);
     light2.position.set(0.5, 0, 5);
-    this.scene.add(light2)
+    // this.scene.add(light2)
     
-    // this.pointLight = new PointLight(0x75ba75);
-    // this.pointLight.position.set(1.5, 0, 2);
-    // this.pointLight.position.set(10*this.mouseTarget.x + 1.5, 10*this.mouseTarget + 0.0, 1);
-    // this.scene.add(this.pointLight);
-    
-    this.spotLight = new SpotLight( 0xffffff, 1.0, 4, 0.233, 0.321, 1.0 );
-    this.spotLight.position.set( this.mouseTarget.x, this.mouseTarget.y, 2 );
-
+    this.spotLight = new SpotLight( 0xffffff, 1.0, 8, 0.3, 0.321, 1.0 );
     this.spotLight.castShadow = true;
-
     this.spotLight.shadow.mapSize.width = 1024;
     this.spotLight.shadow.mapSize.height = 1024;
-
     this.spotLight.shadow.camera.near = 500;
     this.spotLight.shadow.camera.far = 4000;
     this.spotLight.shadow.camera.fov = 30;
@@ -80,7 +69,6 @@ export default class MyScene {
 
     this.ambientLight = new AmbientLight(0xffffff);
     this.ambientLight.position.set(0.5, 0, 2);
-    // this.ambientLight.position.set(this.mouseTarget.x + 0.5, this.mouseTarget + 0.0, 2);
     this.scene.add(this.ambientLight);
 
     // MAIN VARIABLES
@@ -91,6 +79,7 @@ export default class MyScene {
       x: 0,
       y: 0,
     };
+    this.mouseTarget = new Vector2(0,0);
     this.firstPart = true;
 
     // objects
@@ -152,7 +141,7 @@ export default class MyScene {
 
     // rotate ipads on mousemove
     this.objects.ipads.updateRotation(direction);
-
+    console.log(this.mouseTarget)
     // set new mouse coords
     this.mouse.x = event.x / this.width;
     this.mouse.y = event.y / this.height;
@@ -165,8 +154,8 @@ export default class MyScene {
 
     this.updateEvents();
 
-    this.mouseTarget.x += (this.mouse.x - this.mouseTarget.x)*0.05
-    this.mouseTarget.y += (this.mouse.y - this.mouseTarget.y)*0.05
+    this.mouseTarget.x += (this.mouse.x - this.mouseTarget.x)*0.05;
+    this.mouseTarget.y += (this.mouse.y - this.mouseTarget.y)*0.05;
 
     this.objects.blob.updateRotation(this.mouseTarget);
     this.objects.metaball.updateRotation(this.mouseTarget);
@@ -185,8 +174,8 @@ export default class MyScene {
 
     // rotate metaball on mousemove
     this.objects.metaball.updateDelta(this.delta);
-
-    this.spotLight.position.set( -0.4, 0, 2 );
+    
+    this.spotLight.position.set(-4.0 + 5*this.mouseTarget.x, -5*(-0.5 + this.mouseTarget.y), 2);
 
     // render
     requestAnimationFrame(this.render.bind(this));

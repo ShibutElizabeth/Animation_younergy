@@ -16,7 +16,7 @@ export default class Grid {
     setupMesh() {
         this.geometry = new SphereBufferGeometry(1, 100, 100);
         this.time = 0.0;
-        this.getMaterial(0xffd58e, 0.0, 0.15);
+        this.getMaterial(0xffd58e, 1.0, 0.15);
         this.mesh = new Mesh(this.geometry, this.material);
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
@@ -28,7 +28,7 @@ export default class Grid {
         this.material = new MeshStandardMaterial({
             color,
             roughness: roughness,
-            metalness: 0.02,
+            metalness: 0.0,
             opacity,
             side: DoubleSide,
         });

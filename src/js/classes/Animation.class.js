@@ -9,7 +9,8 @@ export default class Animation {
     constructor(camera, objects){
       this.objects = objects;
       this.blob = objects.blob.mesh;
-      this.ipads = objects.ipads.mesh;
+      this.ipadMaterial = objects.ipads.material;
+      this.ipadScreen = objects.ipads.screen;
       this.metaball = objects.metaball.mesh;
       this.grid = objects.grid.mesh;
       this.camera = camera;
@@ -28,10 +29,8 @@ export default class Animation {
       const metaballSize = this.metaball.scale;
 
       // STAGE #0
-      timeline.set(this.ipads.scale, {
-        x: 0.0000001,
-        y: 0.0000001,
-        z: 0.0000001,
+      timeline.set([this.ipadMaterial, this.ipadScreen], {
+        opacity: 0,
       });
       timeline.set(blobSize, {
         x: 1,
@@ -88,18 +87,15 @@ export default class Animation {
           toggleActions: 'restart pause reverse pause',
         }
       })
-      .fromTo([this.ipads.scale], {
-        x: 0.0000001,
-        y: 0.0000001,
-        z: 0.0000001,
+      .fromTo([this.ipadMaterial, this.ipadScreen], {
+        opacity: 0,
       }, {
-        x: 0.00097,
-        y: 0.00097,
-        z: 0.00097,
-        duration: 2,
+        opacity: 1,
+        delay: 1,
+        duration: 0.7,
         scrollTrigger: {
           trigger: '#section-2',
-          start: 'top 80%',
+          start: 'top -30%',
           end: 'bottom top',
           scrub: 1,
           snap: 1,
@@ -108,15 +104,11 @@ export default class Animation {
       })
 
       // STAGE #2
-      .fromTo([this.ipads.scale], {
-        x: 0.00097,
-        y: 0.00097,
-        z: 0.00097,
+      .fromTo([this.ipadMaterial, this.ipadScreen], {
+        opacity: 1,
       }, {
-        x: 0.0000001,
-        y: 0.0000001,
-        z: 0.0000001,
-        duration: 1,
+        opacity: 0,
+        duration: 0.7,
         onStart: ()=>{
           that.changeStage(2);
         },
@@ -126,7 +118,7 @@ export default class Animation {
         scrollTrigger: {
           trigger: '#section-4',
           start: 'top center',
-          end: 'bottom top',
+          end: 'bottom 20%',
           scrub: 1,
           snap: 1,
           toggleActions: 'restart pause reverse pause',
