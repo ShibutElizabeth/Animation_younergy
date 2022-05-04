@@ -1,13 +1,18 @@
 import {
   Group,
-  MeshPhysicalMaterial, 
+  MeshPhysicalMaterial,
   MeshBasicMaterial,
-  TextureLoader
+  TextureLoader,
+  DoubleSide,
+  Mesh,
+  PlaneGeometry,
 } from 'three';
-import { gsap } from 'gsap';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { dumpObject } from '../utils/utils';
-import { Color } from 'three';
+import {
+  gsap
+} from 'gsap';
+import {
+  GLTFLoader
+} from 'three/examples/jsm/loaders/GLTFLoader';
 
 export default class Ipads {
   constructor() {
@@ -38,15 +43,15 @@ export default class Ipads {
 
     const textureLoader = new TextureLoader();
     this.screen = [];
-    for(let i = 0; i < 3; i++){
+    for (let i = 0; i < 3; i++) {
       const texture = textureLoader.load(texUrls[i]);
-      // console.log(texture)
-      // texture.flipY = false;
+      texture.flipY = false;
       const material = new MeshBasicMaterial({
         opacity: 0,
         reflectivity: 1,
         transparent: true,
         map: texture,
+        side: DoubleSide,
       });
       this.screen.push(material);
     }
@@ -61,10 +66,15 @@ export default class Ipads {
       [0.0, 0.0, 1.065],
       [1.065, 0.0, 0.0],
     ];
+    const factors = [
+      [0.4, 0, 0],
+      [0, 0, -0.4],
+      [-0.4, 0, 0],
+    ]
 
     loader.load(link, (gltf) => {
       const root = gltf.scene;
-
+      console.log(this.dumpObject(root).join('\n'));
       this.ipads.push(
         root.getObjectByName('Tablet_1'),
         root.getObjectByName('Tablet_2'),
@@ -79,19 +89,20 @@ export default class Ipads {
         ipad.position.set(positions[idx][0], positions[idx][1], positions[idx][2]);
         ipad.rotateY((idx - 1) * Math.PI / 2);
 
-        const name = `Screen_${idx+1}`;
-        const screen = ipad.getObjectByName(name);
-        
+        // add screen plane
+        const geometry = new PlaneGeometry(0.67, 0.46);
+        const material = this.screen[idx];
+        const plane = new Mesh(geometry, material);
+        plane.position.set(positions[idx][0]+factors[idx][0], positions[idx][1]+factors[idx][1], positions[idx][2]+factors[idx][2]);
+        plane.rotateY((idx - 1) * Math.PI / 2);
+
         // add ipad material
         ipad["children"].forEach((child) => {
           child["material"] = this.material;
         })
-        // add screen material
-        if(screen) screen["material"] = this.screen[idx];
-        // console.log(screen)
-
+    
         // add ipad to the group
-        this.mesh.add(ipad);
+        this.mesh.add(ipad, plane);
       });
 
       this.mesh.position.set(0, 0, 0)

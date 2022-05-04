@@ -37,7 +37,8 @@ body {
 }
 
 .content__section--orange{
-    background-color: #f0712c;
+    /* background-color: #f0712c; */
+    background: radial-gradient(#f89f19, #f0712c);
 }
 
 .small-text{

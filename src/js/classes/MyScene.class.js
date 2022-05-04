@@ -5,7 +5,6 @@ import {
   PerspectiveCamera,
   DirectionalLight,
   SpotLight,
-  AmbientLight,
   Vector2,
   sRGBEncoding,
   PCFSoftShadowMap,
@@ -29,7 +28,6 @@ export default class MyScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.setSize(this.width, this.height);
     this.renderer.setClearColor(0xf0712c, 0);
-    this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = sRGBEncoding;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -42,7 +40,7 @@ export default class MyScene {
 
     // LIGHTS
     const light = new DirectionalLight(0xffffff);
-    light.position.set(1.5, 0, 5);
+    light.position.set(1.5, 0, 7);
     const r = 3;
     light.shadow.camera.near = .001;
     light.shadow.camera.far = 10;
@@ -53,10 +51,6 @@ export default class MyScene {
     light.shadow.camera.updateProjectionMatrix();
     light.castShadow = true;
     this.scene.add(light);
-
-    const light2 = new DirectionalLight(0xffffff, 1);
-    light2.position.set(0.5, 0, 5);
-    // this.scene.add(light2)
     
     this.spotLight = new SpotLight( 0xffffff, 1.0, 8, 0.3, 0.321, 1.0 );
     this.spotLight.castShadow = true;
@@ -67,9 +61,9 @@ export default class MyScene {
     this.spotLight.shadow.camera.fov = 30;
     this.scene.add(this.spotLight);
 
-    this.ambientLight = new AmbientLight(0xffffff);
-    this.ambientLight.position.set(0.5, 0, 2);
-    this.scene.add(this.ambientLight);
+    const light2 = new DirectionalLight(0xffffff, 0.5);
+    light2.position.set(-1, 0, 1);
+    this.scene.add(light2)
 
     // MAIN VARIABLES
     this.time = 0;
@@ -141,7 +135,7 @@ export default class MyScene {
 
     // rotate ipads on mousemove
     this.objects.ipads.updateRotation(direction);
-    console.log(this.mouseTarget)
+
     // set new mouse coords
     this.mouse.x = event.x / this.width;
     this.mouse.y = event.y / this.height;
@@ -175,7 +169,11 @@ export default class MyScene {
     // rotate metaball on mousemove
     this.objects.metaball.updateDelta(this.delta);
     
-    this.spotLight.position.set(-4.0 + 5*this.mouseTarget.x, -5*(-0.5 + this.mouseTarget.y), 2);
+    if(!this.firstPart){
+      this.spotLight.position.set(-4.0 + 5*this.mouseTarget.x, -5*(-0.5 + this.mouseTarget.y), 2);
+    } else{
+      this.spotLight.position.set(-4.0, -5.0, -2);
+    }
 
     // render
     requestAnimationFrame(this.render.bind(this));
