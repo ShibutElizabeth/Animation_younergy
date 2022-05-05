@@ -124,7 +124,15 @@ export default class MyScene {
 
   mousemove(event) {
     // console.log(this.mouse.x * this.width + '   ' + event.x);
-    const direction = this.mouse.x * this.width < event.x ? 1 : -1;
+    // const direction = event.x;
+    let direction = 0;
+    if(event.x < this.width / 3){
+      direction = 1;
+    } else if(event.x < 2 * this.width / 3){
+      direction = 0;
+    } else{
+      direction = -1;
+    }
     this.delta = 1.0;
     if(this.firstPart){
       if(this.animation.stage === 0){

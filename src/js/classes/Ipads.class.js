@@ -7,12 +7,8 @@ import {
   Mesh,
   PlaneGeometry,
 } from 'three';
-import {
-  gsap
-} from 'gsap';
-import {
-  GLTFLoader
-} from 'three/examples/jsm/loaders/GLTFLoader';
+import { gsap } from 'gsap';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 export default class Ipads {
   constructor() {
@@ -110,21 +106,15 @@ export default class Ipads {
   }
 
   updateRotation(direction) {
-    if (!this.isRotating) {
-      this.isRotating = true;
-      const newAngle = this.angle + (direction * Math.PI / 2);
+    const newAngle = direction * Math.PI / 2;
 
-      // check angle's bounds [-Pi/2; Pi/2]
-      this.angle = newAngle > Math.PI / 2 || newAngle < -Math.PI / 2 ? direction * Math.PI / 2 : newAngle;
-      gsap.to(this.mesh.rotation, {
-        y: this.angle,
-        duration: 1,
-        ease: 'none',
-      });
-      setTimeout(() => {
-        this.isRotating = false;
-      }, 1000);
-    }
+    // check angle's bounds [-Pi/2; Pi/2]
+    this.angle = newAngle > Math.PI / 2 || newAngle < -Math.PI / 2 ? direction * Math.PI / 2 : newAngle;
+    gsap.to(this.mesh.rotation, {
+      y: this.angle,
+      duration: 1.2,
+      ease: 'power1.easeIn',
+    });
   }
 
   dumpObject(obj, lines = [], isLast = true, prefix = '') {

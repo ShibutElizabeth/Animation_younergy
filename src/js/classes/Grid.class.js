@@ -5,7 +5,6 @@ import {
     Mesh,
     MeshStandardMaterial,
     DoubleSide,
-    TextureLoader
 } from 'three';
 
 export default class Grid {
