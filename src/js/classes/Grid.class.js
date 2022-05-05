@@ -5,7 +5,7 @@ import {
     Mesh,
     MeshStandardMaterial,
     DoubleSide,
-    Color
+    TextureLoader
 } from 'three';
 
 export default class Grid {
@@ -18,8 +18,8 @@ export default class Grid {
         this.time = 0.0;
         this.getMaterial(0xffd58e, 1.0, 0.15);
         this.mesh = new Mesh(this.geometry, this.material);
-        this.mesh.castShadow = true;
-        this.mesh.receiveShadow = true;
+        this.mesh.castShadow = false;
+        this.mesh.receiveShadow = false;
         this.mesh.position.set(0, 0, 0);
     }
 

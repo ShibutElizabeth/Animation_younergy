@@ -74,7 +74,6 @@ export default class Ipads {
 
     loader.load(link, (gltf) => {
       const root = gltf.scene;
-      console.log(this.dumpObject(root).join('\n'));
       this.ipads.push(
         root.getObjectByName('Tablet_1'),
         root.getObjectByName('Tablet_2'),
@@ -95,6 +94,7 @@ export default class Ipads {
         const plane = new Mesh(geometry, material);
         plane.position.set(positions[idx][0]+factors[idx][0], positions[idx][1]+factors[idx][1], positions[idx][2]+factors[idx][2]);
         plane.rotateY((idx - 1) * Math.PI / 2);
+        plane.rotateX(Math.PI);
 
         // add ipad material
         ipad["children"].forEach((child) => {
@@ -119,6 +119,7 @@ export default class Ipads {
       gsap.to(this.mesh.rotation, {
         y: this.angle,
         duration: 1,
+        ease: 'none',
       });
       setTimeout(() => {
         this.isRotating = false;
