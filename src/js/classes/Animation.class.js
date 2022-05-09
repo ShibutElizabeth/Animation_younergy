@@ -7,6 +7,7 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 export default class Animation {
     constructor(camera, objects){
+      this.sections = Array.from(document.querySelectorAll('.content__section'));
       this.objects = objects;
       this.blob = objects.blob.mesh;
       this.ipadMaterial = objects.ipads.material;
@@ -62,7 +63,7 @@ export default class Animation {
           that.changeStage(0);
         },
         scrollTrigger: {
-          trigger: '#section-2',
+          trigger: this.sections[0],
           start: 'top bottom',
           end: 'bottom top',
           scrub: 1,
@@ -80,7 +81,7 @@ export default class Animation {
         z: 0.5,
         duration: 2,
         scrollTrigger: {
-          trigger: '#section-2',
+          trigger: this.sections[1],
           start: 'top bottom',
           end: 'bottom top',
           scrub: 1,
@@ -94,7 +95,7 @@ export default class Animation {
         delay: 1,
         duration: 0.7,
         scrollTrigger: {
-          trigger: '#section-2',
+          trigger: this.sections[1],
           start: 'top -30%',
           end: 'bottom top',
           scrub: 1,
@@ -116,7 +117,7 @@ export default class Animation {
           that.changeStage(1);
         },
         scrollTrigger: {
-          trigger: '#section-4',
+          trigger: this.sections[3],
           start: 'top center',
           end: 'bottom 20%',
           scrub: 1,
@@ -133,7 +134,7 @@ export default class Animation {
         y: 0.25,
         z: 0.25,
         scrollTrigger: {
-          trigger: '#section-5',
+          trigger: this.sections[4],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -150,7 +151,7 @@ export default class Animation {
         y: 1.2,
         z: 1.2,
         scrollTrigger: {
-          trigger: '#section-5',
+          trigger: this.sections[4],
           start: 'top bottom',
           end: 'bottom top',
           scrub: 1,
@@ -173,7 +174,7 @@ export default class Animation {
           that.changeStage(2);
         },
         scrollTrigger: {
-          trigger: '#section-7',
+          trigger: this.sections[6],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -188,7 +189,7 @@ export default class Animation {
         x: 0.3,
         y: -0.2,
         scrollTrigger: {
-          trigger: '#section-7',
+          trigger: this.sections[6],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -207,7 +208,7 @@ export default class Animation {
           that.textDisappear();
         },
         scrollTrigger: {
-          trigger: '#section-9',
+          trigger: this.sections[8],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -220,7 +221,7 @@ export default class Animation {
       }, {
         x: '-23vw',
         scrollTrigger: {
-          trigger: '#section-9',
+          trigger: this.sections[8],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -233,7 +234,7 @@ export default class Animation {
       }, {
         x: -2.4,
         scrollTrigger: {
-          trigger: '#section-9',
+          trigger: this.sections[8],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -246,7 +247,7 @@ export default class Animation {
       }, {
         x: '-58vw',
         scrollTrigger: {
-          trigger: '#section-9',
+          trigger: this.sections[8],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -271,7 +272,7 @@ export default class Animation {
           that.textAppear();
         },
         scrollTrigger: {
-          trigger: '#section-11',
+          trigger: this.sections[10],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -287,7 +288,7 @@ export default class Animation {
         y: 0.1,
         z: 0.1,
         scrollTrigger: {
-          trigger: '#section-11',
+          trigger: this.sections[10],
           start: 'top center',
           end: 'bottom top',
           scrub: 1,
@@ -302,7 +303,7 @@ export default class Animation {
         x: 0,
         y: 0,
         scrollTrigger: {
-          trigger: '#section-11',
+          trigger: this.sections[10],
           start: 'top center',
           end: 'bottom center',
           scrub: 1,
@@ -320,7 +321,7 @@ export default class Animation {
         z: 1,
         ease: 'power4.easeInOut',
         scrollTrigger: {
-          trigger: '#section-12',
+          trigger: this.sections[11],
           start: 'top center',
           end: 'bottom bottom',
           scrub: 1,
