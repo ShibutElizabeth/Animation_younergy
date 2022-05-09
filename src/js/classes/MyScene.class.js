@@ -92,7 +92,6 @@ export default class MyScene {
     this.resize();
     this.render();
     this.setupListeners();
-    
   }
 
   updateObjects(params){
@@ -123,8 +122,6 @@ export default class MyScene {
   }
 
   mousemove(event) {
-    // console.log(this.mouse.x * this.width + '   ' + event.x);
-    // const direction = event.x;
     let direction = 0;
     if(event.x < this.width / 3){
       direction = 1;
