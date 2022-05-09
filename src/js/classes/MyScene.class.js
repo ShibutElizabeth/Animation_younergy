@@ -219,5 +219,5 @@ export default class MyScene {
 }
 
 new MyScene({
-  dom: document.querySelector("#container")
+  dom: document.querySelector("#scene-container")
 });
