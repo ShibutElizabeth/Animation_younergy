@@ -35,9 +35,9 @@ export default class MyScene {
     this.container.appendChild(this.renderer.domElement);
     
     this.initScene();
-    setTimeout(()=>{
-      this.destroyScene();
-    }, 10000);
+    // setTimeout(()=>{
+    //   this.destroyScene();
+    // }, 10000);
   }
 
   initScene(){
@@ -111,9 +111,9 @@ export default class MyScene {
       that.animation = null;
       that.stop();
     });
-    setTimeout(()=> {
-      this.initScene();
-    }, 2000);
+    // setTimeout(()=> {
+    //   this.initScene();
+    // }, 2000);
     
   }
 
