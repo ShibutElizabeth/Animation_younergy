@@ -365,4 +365,14 @@ export default class Animation {
         duration: 0.6,
       });
     }
+
+    destroy(canvas, callback){
+      gsap.fromTo(canvas, {
+        opacity: 1,
+      }, {
+        opacity: 0,
+        duration: 0.5,
+        onComplete: callback,
+      });
+    }
 }

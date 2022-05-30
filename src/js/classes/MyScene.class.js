@@ -33,7 +33,15 @@ export default class MyScene {
     this.renderer.shadowMap.type = PCFSoftShadowMap;
 
     this.container.appendChild(this.renderer.domElement);
+    
+    this.initScene();
+    setTimeout(()=>{
+      this.destroyScene();
+    }, 10000);
+  }
 
+  initScene(){
+    this.renderer.domElement.style.opacity = 1;
     // CAMERA
     this.camera = new PerspectiveCamera(45, this.width / this.height, 0.001, 1000);
     this.camera.position.set(-1, 0, 2.8);
@@ -94,6 +102,22 @@ export default class MyScene {
     this.setupListeners();
   }
 
+  destroyScene(){
+    const that = this;
+    this.destroyListeners();
+    this.gui = null;
+    this.animation.destroy(this.renderer.domElement, () => {
+      that.scene.clear();
+      that.animation = null;
+      that.stop();
+    });
+    setTimeout(()=> {
+      this.initScene();
+    }, 2000);
+    
+  }
+
+
   updateObjects(params){
     this.objects.blob.updateMesh(params.time/7);
     this.objects.metaball.updateMesh(params.time/6);
@@ -103,6 +127,11 @@ export default class MyScene {
   setupListeners() {
     window.addEventListener("resize", this.resize.bind(this));
     window.addEventListener("mousemove", this.mousemove.bind(this));
+  }
+
+  destroyListeners() {
+    window.removeEventListener("resize", this.resize.bind(this));
+    window.removeEventListener("mousemove", this.mousemove.bind(this));
   }
 
   resize() {
@@ -208,12 +237,12 @@ export default class MyScene {
       secondParam: 0.02,
       colorParam: colorRGB,
     };
-    this.gui = new GUI();
-    this.gui.add(this.uniforms, "firstParam", 0, 1, 0.01);
-    this.gui.add(this.uniforms, "secondParam", 0, 1, 0.01);
-    this.gui.add(colorRGB, 'R', 0.0, 1.0, 0.01);
-    this.gui.add(colorRGB, 'G', 0.0, 1.0, 0.01);
-    this.gui.add(colorRGB, 'B', 0.0, 1.0, 0.01);
+    // this.gui = new GUI();
+    // this.gui.add(this.uniforms, "firstParam", 0, 1, 0.01);
+    // this.gui.add(this.uniforms, "secondParam", 0, 1, 0.01);
+    // this.gui.add(colorRGB, 'R', 0.0, 1.0, 0.01);
+    // this.gui.add(colorRGB, 'G', 0.0, 1.0, 0.01);
+    // this.gui.add(colorRGB, 'B', 0.0, 1.0, 0.01);
   }
 
 }
